@@ -26,7 +26,6 @@ public record UsuarioRequest(
 ) {
 
     public UsuarioRequest {
-        // Espaços nas pontas não devem invalidar o e-mail antes da normalização
         email = email == null ? null : email.strip();
     }
 }

@@ -24,12 +24,6 @@ import java.time.Instant;
 import java.util.List;
 import java.util.stream.Stream;
 
-/**
- * Converte todas as exceções da API em respostas no padrão RFC 7807 (Problem Details).
- * <p>
- * Toda resposta de erro contém {@code status}, {@code title}, {@code detail}, {@code codigo}
- * e {@code timestamp}; erros de validação incluem também a lista {@code erros} por campo.
- */
 @RestControllerAdvice
 public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
@@ -54,7 +48,6 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ResponseEntity<ProblemDetail> handleDataIntegrity(DataIntegrityViolationException ex) {
-        // A mensagem do banco traz o valor duplicado (ex.: e-mail), por isso só a restrição vai para o log
         String restricao = ex.getCause() instanceof org.hibernate.exception.ConstraintViolationException violacao
                 ? violacao.getConstraintName() : "desconhecida";
         log.warn("Violação de integridade dos dados (restrição: {})", restricao);
@@ -129,10 +122,6 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         return handleExceptionInternal(ex, problema, headers, HttpStatus.CONTENT_TOO_LARGE, request);
     }
 
-    /**
-     * Ponto único por onde passam as respostas geradas pela classe base do Spring
-     * (404 de rota inexistente, 405, 415 etc.), garantindo o mesmo formato e idioma.
-     */
     @Override
     protected ResponseEntity<Object> handleExceptionInternal(Exception ex,
                                                              Object body,

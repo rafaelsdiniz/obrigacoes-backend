@@ -8,9 +8,6 @@ import org.springframework.data.jpa.domain.Specification;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Monta a consulta de usuários a partir dos filtros opcionais informados.
- */
 final class UsuarioSpecifications {
 
     private UsuarioSpecifications() {

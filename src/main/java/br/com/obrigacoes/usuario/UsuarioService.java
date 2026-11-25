@@ -49,9 +49,6 @@ public class UsuarioService {
                 .orElseThrow(() -> new RecursoNaoEncontradoException(RECURSO, id));
     }
 
-    /**
-     * Retorna o usuário apenas se estiver ativo, para uso em novas atribuições.
-     */
     public Usuario buscarAtivoPorId(Long id) {
         Usuario usuario = buscarPorId(id);
         if (!usuario.isAtivo()) {

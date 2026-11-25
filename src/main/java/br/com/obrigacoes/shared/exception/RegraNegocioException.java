@@ -2,10 +2,6 @@ package br.com.obrigacoes.shared.exception;
 
 import org.springframework.http.HttpStatus;
 
-/**
- * Indica que a requisição é válida no formato, mas viola uma regra de negócio,
- * como vincular uma empresa inativa ou retroceder o status de uma obrigação.
- */
 public class RegraNegocioException extends ApiException {
 
     public RegraNegocioException(String mensagem) {

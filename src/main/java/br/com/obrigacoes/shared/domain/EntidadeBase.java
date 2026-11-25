@@ -15,10 +15,6 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Objects;
 
-/**
- * Identificador, datas de auditoria e controle de concorrência otimista
- * compartilhados por todas as entidades.
- */
 @MappedSuperclass
 public abstract class EntidadeBase {
 
@@ -47,19 +43,10 @@ public abstract class EntidadeBase {
         atualizadoEm = agora();
     }
 
-    /**
-     * Precisão de microssegundos, a mesma do DATETIME(6) do MySQL, para que o valor
-     * retornado logo após salvar seja igual ao lido do banco depois.
-     */
     private static Instant agora() {
         return Instant.now().truncatedTo(ChronoUnit.MICROS);
     }
 
-    /**
-     * Controle de concorrência otimista entre requisições: a edição só é aceita se o cliente
-     * partiu da versão atual do registro. Sem isso, quem salvar por último sobrescreve
-     * silenciosamente a alteração de outra pessoa.
-     */
     public void verificarVersao(Long versaoInformada) {
         if (!Objects.equals(versao, versaoInformada)) {
             throw new ConflitoException(
@@ -83,11 +70,6 @@ public abstract class EntidadeBase {
         return versao;
     }
 
-    /**
-     * Igualdade pelo id, comparando a classe real da entidade para que um proxy
-     * lazy do Hibernate seja igual à própria entidade carregada. Entidades ainda
-     * não persistidas (sem id) só são iguais a si mesmas.
-     */
     @Override
     public boolean equals(Object outro) {
         if (this == outro) {

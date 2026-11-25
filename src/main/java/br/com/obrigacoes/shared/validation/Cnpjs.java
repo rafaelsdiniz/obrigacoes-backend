@@ -3,15 +3,6 @@ package br.com.obrigacoes.shared.validation;
 import java.util.Locale;
 import java.util.regex.Pattern;
 
-/**
- * Normalização e validação de CNPJ nos formatos numérico e alfanumérico.
- * <p>
- * A partir de julho de 2026 a Receita Federal passou a emitir CNPJs alfanuméricos:
- * as 12 primeiras posições aceitam letras maiúsculas e dígitos, e os 2 dígitos
- * verificadores continuam numéricos. O cálculo do módulo 11 é o mesmo, usando como
- * valor de cada caractere o seu código ASCII menos 48 (assim '0'..'9' valem 0..9
- * e 'A'..'Z' valem 17..42), o que mantém compatibilidade total com o formato numérico.
- */
 public final class Cnpjs {
 
     private static final Pattern FORMATO = Pattern.compile("[0-9A-Z]{12}[0-9]{2}");
@@ -22,9 +13,6 @@ public final class Cnpjs {
     private Cnpjs() {
     }
 
-    /**
-     * Remove a máscara (pontos, barra, hífen e espaços) e converte para maiúsculas.
-     */
     public static String normalizar(String cnpj) {
         return cnpj == null ? null : MASCARA.matcher(cnpj).replaceAll("").toUpperCase(Locale.ROOT);
     }

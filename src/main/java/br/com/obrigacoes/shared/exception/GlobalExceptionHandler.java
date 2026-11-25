@@ -1,6 +1,5 @@
 package br.com.obrigacoes.shared.exception;
 
-import jakarta.validation.ConstraintViolationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.TypeMismatchException;
@@ -45,14 +44,6 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         return responder(problema(ex.getStatus(), ex.getTitulo(), ex.getMessage(), ex.getCodigo()));
     }
 
-    @ExceptionHandler(ConstraintViolationException.class)
-    public ResponseEntity<ProblemDetail> handleConstraintViolation(ConstraintViolationException ex) {
-        List<ErroCampo> erros = ex.getConstraintViolations().stream()
-                .map(violacao -> new ErroCampo(ultimoNo(violacao.getPropertyPath().toString()), violacao.getMessage()))
-                .toList();
-        return responder(problemaDeValidacao(erros));
-    }
-
     @ExceptionHandler(OptimisticLockingFailureException.class)
     public ResponseEntity<ProblemDetail> handleOptimisticLock(OptimisticLockingFailureException ex) {
         log.debug("Conflito de concorrência detectado", ex);
@@ -63,7 +54,10 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ResponseEntity<ProblemDetail> handleDataIntegrity(DataIntegrityViolationException ex) {
-        log.warn("Violação de integridade dos dados: {}", ex.getMostSpecificCause().getMessage());
+        // A mensagem do banco traz o valor duplicado (ex.: e-mail), por isso só a restrição vai para o log
+        String restricao = ex.getCause() instanceof org.hibernate.exception.ConstraintViolationException violacao
+                ? violacao.getConstraintName() : "desconhecida";
+        log.warn("Violação de integridade dos dados (restrição: {})", restricao);
         return responder(problema(HttpStatus.CONFLICT, "Conflito de dados",
                 "A operação viola uma restrição de integridade dos dados.", CodigoErro.CONFLITO));
     }
@@ -83,7 +77,8 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         var resultado = ex.getBindingResult();
         List<ErroCampo> erros = Stream.concat(
                 resultado.getFieldErrors().stream()
-                        .map(erro -> new ErroCampo(erro.getField(), erro.getDefaultMessage())),
+                        .map(erro -> new ErroCampo(erro.getField(),
+                                erro.isBindingFailure() ? "Valor inválido." : erro.getDefaultMessage())),
                 resultado.getGlobalErrors().stream()
                         .map(erro -> new ErroCampo(erro.getObjectName(), erro.getDefaultMessage()))
         ).toList();
@@ -186,11 +181,6 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
     private static boolean possuiCodigo(ProblemDetail problema) {
         return problema.getProperties() != null && problema.getProperties().containsKey(PROP_CODIGO);
-    }
-
-    private static String ultimoNo(String caminho) {
-        int ponto = caminho.lastIndexOf('.');
-        return ponto >= 0 ? caminho.substring(ponto + 1) : caminho;
     }
 
     private static ResponseEntity<ProblemDetail> responder(ProblemDetail problema) {

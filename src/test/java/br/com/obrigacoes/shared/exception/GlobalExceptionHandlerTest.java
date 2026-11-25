@@ -5,6 +5,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Positive;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.dao.CannotAcquireLockException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.MediaType;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
@@ -80,6 +81,13 @@ class GlobalExceptionHandlerTest {
     @Test
     void deveRetornar409ParaEdicaoConcorrente() throws Exception {
         mockMvc.perform(get("/teste/concorrencia"))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.codigo").value("CONFLITO"));
+    }
+
+    @Test
+    void deveRetornar409ParaDeadlockOuEsperaDeBloqueio() throws Exception {
+        mockMvc.perform(get("/teste/bloqueio"))
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.codigo").value("CONFLITO"));
     }
@@ -169,6 +177,11 @@ class GlobalExceptionHandlerTest {
         @GetMapping("/teste/concorrencia")
         void concorrencia() {
             throw new ObjectOptimisticLockingFailureException(Object.class, 1L);
+        }
+
+        @GetMapping("/teste/bloqueio")
+        void bloqueio() {
+            throw new CannotAcquireLockException("Deadlock found when trying to get lock");
         }
 
         @PostMapping("/teste/validacao")

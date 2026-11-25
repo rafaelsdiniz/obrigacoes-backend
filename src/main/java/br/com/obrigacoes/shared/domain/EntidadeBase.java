@@ -2,50 +2,39 @@ package br.com.obrigacoes.shared.domain;
 
 import br.com.obrigacoes.shared.exception.ConflitoException;
 import jakarta.persistence.Column;
+import jakarta.persistence.EntityListeners;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.MappedSuperclass;
-import jakarta.persistence.PrePersist;
-import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Version;
 import org.hibernate.proxy.HibernateProxy;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.Instant;
-import java.time.temporal.ChronoUnit;
 import java.util.Objects;
 
 @MappedSuperclass
+@EntityListeners(AuditingEntityListener.class)
 public abstract class EntidadeBase {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @CreatedDate
     @Column(name = "criado_em", nullable = false, updatable = false)
     private Instant criadoEm;
 
+    @LastModifiedDate
     @Column(name = "atualizado_em", nullable = false)
     private Instant atualizadoEm;
 
     @Version
     @Column(nullable = false)
     private Long versao;
-
-    @PrePersist
-    protected void aoCriar() {
-        criadoEm = agora();
-        atualizadoEm = criadoEm;
-    }
-
-    @PreUpdate
-    protected void aoAtualizar() {
-        atualizadoEm = agora();
-    }
-
-    private static Instant agora() {
-        return Instant.now().truncatedTo(ChronoUnit.MICROS);
-    }
 
     public void verificarVersao(Long versaoInformada) {
         if (!Objects.equals(versao, versaoInformada)) {

@@ -1,0 +1,45 @@
+name: obrigacoes
+
+services:
+  mysql:
+    image: mysql:8.4
+    container_name: obrigacoes-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: ${DB_NAME:-obrigacoes}
+      MYSQL_USER: ${DB_USERNAME:-obrigacoes}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-obrigacoes}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-root}
+      TZ: UTC
+    ports:
+      - "${DB_PORT:-3306}:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -u root -p$$MYSQL_ROOT_PASSWORD --silent"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  api:
+    build: .
+    image: obrigacoes-api:local
+    container_name: obrigacoes-api
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      DB_URL: jdbc:mysql://mysql:3306/${DB_NAME:-obrigacoes}?serverTimezone=UTC&allowPublicKeyRetrieval=true&useSSL=false
+      DB_USERNAME: ${DB_USERNAME:-obrigacoes}
+      DB_PASSWORD: ${DB_PASSWORD:-obrigacoes}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:3000,http://localhost:8081}
+    ports:
+      - "${API_PORT:-8080}:8080"
+    volumes:
+      - anexos-data:/app/storage
+
+volumes:
+  mysql-data:
+  anexos-data:

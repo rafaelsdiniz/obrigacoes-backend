@@ -26,7 +26,7 @@ import java.util.Objects;
 @Transactional(readOnly = true)
 public class ObrigacaoService {
 
-    private static final String RECURSO = "Obrigação";
+    private static final String RECURSO = "obrigação";
 
     private final ObrigacaoRepository repository;
     private final HistoricoStatusObrigacaoRepository historicoRepository;

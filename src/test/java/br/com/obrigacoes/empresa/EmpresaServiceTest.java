@@ -87,7 +87,7 @@ class EmpresaServiceTest {
 
         assertThatThrownBy(() -> service.buscarPorId(99L))
                 .isInstanceOf(RecursoNaoEncontradoException.class)
-                .hasMessage("Empresa com id 99 não foi encontrado(a).");
+                .hasMessage("Não existe empresa com o id 99.");
     }
 
     @Test

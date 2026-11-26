@@ -11,8 +11,8 @@ O aplicativo Flutter roda na web e no Android, consome a API REST e tem telas de
 - **Organização por funcionalidade** (`features/empresas`, `features/obrigacoes`…), com as camadas `data` (HTTP e repositórios), `domain` (modelos) e `presentation` (telas e estado). O que é comum fica em `core`.
 - **Riverpod** para estado e injeção de dependências.
 - **go_router** para rotas declarativas com URLs reais na web.
-- **Dio** como cliente HTTP, com interceptor que converte Problem Details em uma exceção tipada.
-- **URL da API em runtime**: na web, o nginx gera um `config.json` a partir da variável `API_URL` quando o contêiner sobe. Em desenvolvimento, usa-se `--dart-define`.
+- **Dio** como cliente HTTP, encapsulado em um `ClienteApi` que converte qualquer falha em uma exceção tipada (`ErroApi`) a partir do Problem Details.
+- **URL da API em runtime**: na web, o nginx gera o `/config.json` a partir da variável `API_URL` quando o contêiner sobe. Em desenvolvimento, usa-se `--dart-define`.
 
 ## Alternativas consideradas
 

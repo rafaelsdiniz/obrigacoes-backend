@@ -94,7 +94,7 @@ Exemplos: `feat: fluxo de status das obrigações com histórico`, `test: transi
 | Formatação | `dart format` |
 | Widgets | `const` sempre que possível; widgets pequenos extraídos em classes, e não em métodos que retornam `Widget` |
 | Estado | Riverpod; nada de `setState` para dados vindos da API |
-| Modelos | Imutáveis, com `fromJson` e `toJson` |
+| Modelos | Imutáveis, com `deJson` e `paraJson` |
 | Arquivos | `snake_case.dart`, um widget público por arquivo |
 
 ## 5. Pull requests

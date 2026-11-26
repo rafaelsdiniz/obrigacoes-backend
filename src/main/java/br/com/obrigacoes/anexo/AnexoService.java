@@ -22,7 +22,7 @@ import java.util.List;
 @Transactional(readOnly = true)
 class AnexoService {
 
-    private static final String RECURSO = "Anexo";
+    private static final String RECURSO = "anexo";
 
     private final AnexoRepository repository;
     private final ObrigacaoService obrigacaoService;

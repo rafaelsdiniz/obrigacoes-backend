@@ -65,7 +65,8 @@ class EmpresaControllerIntegracaoTest extends IntegracaoTest {
 
         mockMvc.perform(post(URL).contentType(MediaType.APPLICATION_JSON).content(json("Outra", "11.222.333/0001-81")))
                 .andExpect(status().isConflict())
-                .andExpect(jsonPath("$.detail").value("Já existe uma empresa cadastrada com este CNPJ."));
+                .andExpect(jsonPath("$.detail").value("Já existe uma empresa cadastrada com este CNPJ."))
+                .andExpect(jsonPath("$.erros[0].campo").value("cnpj"));
     }
 
     @Test

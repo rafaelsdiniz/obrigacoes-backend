@@ -112,7 +112,7 @@ class AnexoServiceTest {
 
     @Test
     void naoDeveArmazenarArquivoDeObrigacaoInexistente() {
-        doThrow(new RecursoNaoEncontradoException("Obrigação", 5L)).when(obrigacaoService).verificarExistencia(5L);
+        doThrow(new RecursoNaoEncontradoException("obrigação", 5L)).when(obrigacaoService).verificarExistencia(5L);
 
         assertThatThrownBy(() -> service.anexar(5L, arquivo)).isInstanceOf(RecursoNaoEncontradoException.class);
         verifyNoInteractions(validador, armazenamento, repository);
@@ -151,7 +151,7 @@ class AnexoServiceTest {
 
         assertThatThrownBy(() -> service.baixar(5L, 9L))
                 .isInstanceOf(RecursoNaoEncontradoException.class)
-                .hasMessage("Anexo com id 9 não foi encontrado(a).");
+                .hasMessage("Não existe anexo com o id 9.");
         verifyNoInteractions(armazenamento);
     }
 

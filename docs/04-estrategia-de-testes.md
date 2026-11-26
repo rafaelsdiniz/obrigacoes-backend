@@ -56,7 +56,7 @@ Cada regra de negócio tem pelo menos um teste que falha se ela for quebrada.
 
 ## 4. Convenções
 
-- **Nome descritivo** com `@DisplayName` em português, descrevendo o comportamento: *"não permite concluir obrigação pendente"*.
+- **O nome do método descreve o comportamento** esperado, em português: `deveSeguirOFluxoDeStatusERegistrarOHistorico`, `naoDevePularRetrocederNemAlterarObrigacaoConcluida`.
 - Estrutura **Arrange / Act / Assert** com blocos separados por linha em branco.
 - **Um comportamento por teste.** Variações de entrada usam `@ParameterizedTest`.
 - Testes **independentes**: cada teste de integração cria os próprios dados e não depende da ordem de execução.

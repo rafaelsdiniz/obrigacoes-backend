@@ -147,6 +147,14 @@ class GlobalExceptionHandlerTest {
     }
 
     @Test
+    void deveRetornarRecursoNaoEncontradoParaRotaInexistente() throws Exception {
+        mockMvc.perform(get("/rota/que/nao/existe"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.title").value("Recurso não encontrado"))
+                .andExpect(jsonPath("$.codigo").value("RECURSO_NAO_ENCONTRADO"));
+    }
+
+    @Test
     void deveTraduzirErrosGeradosPeloSpring() throws Exception {
         mockMvc.perform(put("/teste/conflito"))
                 .andExpect(status().isMethodNotAllowed())

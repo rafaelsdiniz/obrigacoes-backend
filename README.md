@@ -1,8 +1,45 @@
-# Obrigações API
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/assets/logo-player-fundo-escuro.png">
+    <img src="docs/assets/logo-player-fundo-claro.png" alt="Player Contabilidade" width="225">
+  </picture>
+</p>
 
-[![CI](https://github.com/rafaelsdiniz/obrigacoes-backend/actions/workflows/ci.yml/badge.svg)](https://github.com/rafaelsdiniz/obrigacoes-backend/actions/workflows/ci.yml)
+<h1 align="center">Gerenciamento de Obrigações · API</h1>
 
-API REST para gerenciamento de obrigações de empresas clientes de um escritório de contabilidade.
+<p align="center">
+  API REST para o escritório controlar empresas clientes, colaboradores, obrigações com fluxo de status e os documentos de cada uma.
+</p>
+
+<p align="center">
+  <a href="https://github.com/rafaelsdiniz/obrigacoes-backend/actions/workflows/ci.yml"><img src="https://github.com/rafaelsdiniz/obrigacoes-backend/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
+  <img src="https://img.shields.io/badge/Java-21-ED8B00?logo=openjdk&logoColor=white" alt="Java 21">
+  <img src="https://img.shields.io/badge/Spring%20Boot-4-6DB33F?logo=springboot&logoColor=white" alt="Spring Boot 4">
+  <img src="https://img.shields.io/badge/MySQL-8.4-4479A1?logo=mysql&logoColor=white" alt="MySQL 8.4">
+  <img src="https://img.shields.io/badge/cobertura-%E2%89%A5%2090%25-047857" alt="Cobertura mínima de 90%">
+</p>
+
+<p align="center">
+  <a href="https://github.com/rafaelsdiniz/obrigacoes-frontend">Aplicativo (frontend)</a> ·
+  <a href="docs/README.md">Documentação</a> ·
+  <a href="https://trello.com/b/lO3pOAnQ/sistema-de-gerenciamento-de-obrigacoes-player">Quadro no Trello</a>
+</p>
+
+---
+
+## Sumário
+
+- [Documentação](#documentação)
+- [Funcionalidades](#funcionalidades)
+- [Tecnologias](#tecnologias)
+- [Execução rápida](#execução-rápida)
+- [Desenvolvimento local](#desenvolvimento-local)
+- [Configuração do ambiente](#configuração-do-ambiente)
+- [Estrutura do projeto](#estrutura-do-projeto)
+- [Decisões arquiteturais](#decisões-arquiteturais)
+- [Testes e qualidade](#testes-e-qualidade)
+- [Melhorias futuras](#melhorias-futuras)
+- [Telas do aplicativo](#telas-do-aplicativo)
 
 ## Documentação
 
@@ -15,16 +52,14 @@ API REST para gerenciamento de obrigações de empresas clientes de um escritór
 | [Guia de contribuição](docs/05-guia-de-contribuicao.md) | Fluxo de trabalho, commits, padrões de código e definição de pronto |
 | [Decisões arquiteturais](docs/adr/README.md) | ADRs |
 
-Andamento do desenvolvimento no [quadro do Trello](https://trello.com/b/lO3pOAnQ/sistema-de-gerenciamento-de-obrigacoes-player).
-
-O aplicativo Flutter que consome esta API está em [obrigacoes-frontend](https://github.com/rafaelsdiniz/obrigacoes-frontend).
+O aplicativo Flutter que consome esta API está em [obrigacoes-frontend](https://github.com/rafaelsdiniz/obrigacoes-frontend), e o andamento do desenvolvimento, no [quadro do Trello](https://trello.com/b/lO3pOAnQ/sistema-de-gerenciamento-de-obrigacoes-player).
 
 ## Funcionalidades
 
 - **Empresas** e **usuários**: cadastro, edição, consulta paginada com filtros e ativação/inativação. Cadastros inativos continuam visíveis, mas não recebem novas obrigações.
 - **Obrigações**: vinculadas a uma empresa e a um responsável, com tipo, competência e vencimento. Seguem o fluxo **Pendente → Em andamento → Concluída**, sem pular nem voltar etapas; concluída não pode mais ser alterada. Cada mudança de status fica no histórico.
 - **Anexos**: vários arquivos por obrigação (PDF, PNG, JPEG, XML, CSV, XLSX e DOCX, até 10 MB), com o tipo conferido pelo conteúdo do arquivo.
-- **Resumo para o painel**: totais por status e de atrasadas; a listagem de obrigações também filtra por período de vencimento.
+- **Consultas para o painel e a lista**: resumo com totais por status e de atrasadas (opcionalmente por empresa ou responsável) e listagem de obrigações com busca, filtros por status, atraso, tipo, empresa, responsável e período de vencimento, e ordenação.
 
 ## Tecnologias
 
@@ -49,7 +84,7 @@ docker compose up -d --build
 | Aplicativo web | http://localhost:3000 |
 | API | http://localhost:8080 |
 | Swagger UI | http://localhost:8080/swagger-ui.html |
-| Health check | http://localhost:8080/actuator/health |
+| Health check | http://localhost:8080/actuator/health (readiness inclui o banco) |
 
 O Compose sobe três serviços: `mysql`, `api` e `app` (o aplicativo Flutter web servido por nginx). A API só inicia com o banco saudável, e o aplicativo só inicia com a API saudável. As migrations do Flyway rodam na subida da API.
 
@@ -116,6 +151,7 @@ Cada decisão está detalhada em um [ADR](docs/adr/README.md). Em resumo:
 - Testes unitários das regras de domínio e dos services.
 - Testes de integração da API com MySQL real em container (Testcontainers).
 - Testes de arquitetura (ArchUnit) e cobertura mínima de 90% verificada pelo JaCoCo no `./mvnw verify`.
+- Compilação com `-Xlint:all` e `-Werror`: qualquer aviso do compilador quebra o build.
 - O CI compila, testa e gera a imagem Docker em todo pull request; na `main`, publica a imagem no GHCR.
 
 Detalhes em [Estratégia de testes](docs/04-estrategia-de-testes.md).
@@ -128,3 +164,11 @@ Detalhes em [Estratégia de testes](docs/04-estrategia-de-testes.md).
 - Armazenamento dos anexos em S3/MinIO, para escalar com várias instâncias da API.
 - Calendário fiscal com sugestão de vencimentos por tipo de obrigação e feriados.
 - Observabilidade: métricas (Prometheus), tracing distribuído e logs estruturados.
+
+## Telas do aplicativo
+
+O aplicativo Flutter que consome esta API está em [obrigacoes-frontend](https://github.com/rafaelsdiniz/obrigacoes-frontend#telas), com todas as telas, nos temas claro e escuro e no celular.
+
+| Painel | Detalhe da obrigação |
+|---|---|
+| ![Painel](https://raw.githubusercontent.com/rafaelsdiniz/obrigacoes-frontend/main/docs/telas/painel.png) | ![Detalhe da obrigação](https://raw.githubusercontent.com/rafaelsdiniz/obrigacoes-frontend/main/docs/telas/obrigacao-detalhe.png) |

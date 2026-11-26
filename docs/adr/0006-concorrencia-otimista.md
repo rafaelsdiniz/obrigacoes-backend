@@ -8,7 +8,7 @@ Dois colaboradores podem abrir o mesmo registro e salvar alterações em sequên
 
 ## Decisão
 
-- Toda entidade tem a coluna `versao`, controlada pelo `@Version` do JPA.
+- Toda entidade editável (empresa, usuário e obrigação) tem a coluna `versao`, controlada pelo `@Version` do JPA. Histórico e anexos são imutáveis e não precisam dela.
 - As respostas incluem `versao`. O `PUT` exige a versão que o cliente leu, e a edição é recusada com `409 CONFLITO` se o registro mudou desde então.
 - Conflitos detectados pelo próprio JPA na gravação também são traduzidos em `409`.
 - A mudança de status é a exceção: ela não depende do que o cliente leu, só do status atual. Por isso usa bloqueio pessimista de linha durante a transação curta (ADR-0004). Falhas de bloqueio no banco também viram `409`.

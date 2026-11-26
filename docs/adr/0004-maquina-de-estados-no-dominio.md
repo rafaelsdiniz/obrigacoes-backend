@@ -13,7 +13,7 @@ Toda obrigação começa em Pendente e segue Pendente → Em andamento → Concl
 - A API expõe `PATCH /obrigacoes/{id}/status` com o status de destino. A resposta de toda obrigação traz `proximoStatus`, para que o cliente mostre só a ação permitida sem reimplementar o fluxo.
 - A mudança de status bloqueia a linha da obrigação (`SELECT … FOR UPDATE`), de modo que pedidos simultâneos são avaliados um depois do outro e o histórico nunca é duplicado.
 - Não é permitido pular etapas: o fluxo descrito é sequencial, e uma obrigação concluída sem nunca ter sido iniciada não teria o início registrado no histórico.
-- Cada transição, inclusive a criação, gera um registro imutável em `obrigacao_historico_status`, gravado na mesma transação.
+- Cada transição, inclusive a criação, gera um registro imutável em `historico_status_obrigacao`, gravado na mesma transação.
 - Uma restrição `CHECK` no banco limita os valores de status.
 
 ## Alternativas consideradas

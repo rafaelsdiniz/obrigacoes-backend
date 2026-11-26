@@ -86,7 +86,6 @@ class EmpresaControllerIntegracaoTest extends IntegracaoTest {
                         .content(jsonComVersao("Edição da Ana", "11222333000181", 0)))
                 .andExpect(status().isOk());
 
-        // Outra pessoa ainda estava com a versão 0 aberta na tela
         mockMvc.perform(put(URL + "/" + id).contentType(MediaType.APPLICATION_JSON)
                         .content(jsonComVersao("Edição do Bruno", "11222333000181", 0)))
                 .andExpect(status().isConflict())

@@ -52,9 +52,6 @@ public class EmpresaService {
                 .orElseThrow(() -> new RecursoNaoEncontradoException(RECURSO, id));
     }
 
-    /**
-     * Retorna a empresa apenas se estiver ativa, para uso em novas atribuições.
-     */
     public Empresa buscarAtivaPorId(Long id) {
         Empresa empresa = buscarPorId(id);
         if (!empresa.isAtiva()) {

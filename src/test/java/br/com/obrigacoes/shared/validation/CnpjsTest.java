@@ -54,7 +54,6 @@ class CnpjsTest {
     void deveValidarIndependenteDoIdiomaPadraoDoServidor() {
         Locale original = Locale.getDefault();
         try {
-            // No turco, "i".toUpperCase() vira "İ", o que invalidaria CNPJs com a letra I
             Locale.setDefault(Locale.forLanguageTag("tr-TR"));
             assertThat(Cnpjs.normalizar("12.ibc.345/01de-10")).isEqualTo("12IBC34501DE10");
             assertThat(Cnpjs.isValido("12.ibc.345/01de-10")).isTrue();

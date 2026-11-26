@@ -9,9 +9,6 @@ import org.springframework.data.jpa.domain.Specification;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Monta a consulta de empresas a partir dos filtros opcionais informados.
- */
 final class EmpresaSpecifications {
 
     private EmpresaSpecifications() {
@@ -27,7 +24,6 @@ final class EmpresaSpecifications {
         String busca = Textos.limparOuNulo(filtro.busca());
         if (busca != null) {
             String termo = Consultas.contendo(busca);
-            // Só compara com o CNPJ se sobrar algo após remover a máscara; senão "." viraria "%%" e traria tudo
             String cnpjSemMascara = Cnpjs.normalizar(busca);
             condicoes.add((raiz, consulta, cb) -> {
                 var nome = cb.or(

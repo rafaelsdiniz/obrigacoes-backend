@@ -2,33 +2,33 @@ package br.com.obrigacoes.shared.domain;
 
 import br.com.obrigacoes.shared.exception.ConflitoException;
 import jakarta.persistence.Column;
+import jakarta.persistence.EntityListeners;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.MappedSuperclass;
-import jakarta.persistence.PrePersist;
-import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Version;
 import org.hibernate.proxy.HibernateProxy;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.Instant;
-import java.time.temporal.ChronoUnit;
 import java.util.Objects;
 
-/**
- * Identificador, datas de auditoria e controle de concorrência otimista
- * compartilhados por todas as entidades.
- */
 @MappedSuperclass
+@EntityListeners(AuditingEntityListener.class)
 public abstract class EntidadeBase {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @CreatedDate
     @Column(name = "criado_em", nullable = false, updatable = false)
     private Instant criadoEm;
 
+    @LastModifiedDate
     @Column(name = "atualizado_em", nullable = false)
     private Instant atualizadoEm;
 
@@ -36,30 +36,6 @@ public abstract class EntidadeBase {
     @Column(nullable = false)
     private Long versao;
 
-    @PrePersist
-    protected void aoCriar() {
-        criadoEm = agora();
-        atualizadoEm = criadoEm;
-    }
-
-    @PreUpdate
-    protected void aoAtualizar() {
-        atualizadoEm = agora();
-    }
-
-    /**
-     * Precisão de microssegundos, a mesma do DATETIME(6) do MySQL, para que o valor
-     * retornado logo após salvar seja igual ao lido do banco depois.
-     */
-    private static Instant agora() {
-        return Instant.now().truncatedTo(ChronoUnit.MICROS);
-    }
-
-    /**
-     * Controle de concorrência otimista entre requisições: a edição só é aceita se o cliente
-     * partiu da versão atual do registro. Sem isso, quem salvar por último sobrescreve
-     * silenciosamente a alteração de outra pessoa.
-     */
     public void verificarVersao(Long versaoInformada) {
         if (!Objects.equals(versao, versaoInformada)) {
             throw new ConflitoException(
@@ -83,11 +59,6 @@ public abstract class EntidadeBase {
         return versao;
     }
 
-    /**
-     * Igualdade pelo id, comparando a classe real da entidade para que um proxy
-     * lazy do Hibernate seja igual à própria entidade carregada. Entidades ainda
-     * não persistidas (sem id) só são iguais a si mesmas.
-     */
     @Override
     public boolean equals(Object outro) {
         if (this == outro) {

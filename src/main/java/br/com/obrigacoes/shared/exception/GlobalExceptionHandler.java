@@ -3,8 +3,10 @@ package br.com.obrigacoes.shared.exception;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.TypeMismatchException;
+import org.springframework.dao.ConcurrencyFailureException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.OptimisticLockingFailureException;
+import org.springframework.dao.PessimisticLockingFailureException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
@@ -20,16 +22,14 @@ import org.springframework.web.method.annotation.HandlerMethodValidationExceptio
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
+import tools.jackson.databind.exc.MismatchedInputException;
+
 import java.time.Instant;
 import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-/**
- * Converte todas as exceções da API em respostas no padrão RFC 7807 (Problem Details).
- * <p>
- * Toda resposta de erro contém {@code status}, {@code title}, {@code detail}, {@code codigo}
- * e {@code timestamp}; erros de validação incluem também a lista {@code erros} por campo.
- */
 @RestControllerAdvice
 public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
@@ -44,8 +44,8 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         return responder(problema(ex.getStatus(), ex.getTitulo(), ex.getMessage(), ex.getCodigo()));
     }
 
-    @ExceptionHandler(OptimisticLockingFailureException.class)
-    public ResponseEntity<ProblemDetail> handleOptimisticLock(OptimisticLockingFailureException ex) {
+    @ExceptionHandler({OptimisticLockingFailureException.class, PessimisticLockingFailureException.class})
+    public ResponseEntity<ProblemDetail> handleConcorrencia(ConcurrencyFailureException ex) {
         log.debug("Conflito de concorrência detectado", ex);
         return responder(problema(HttpStatus.CONFLICT, "Conflito de dados",
                 "O registro foi alterado por outra operação. Recarregue os dados e tente novamente.",
@@ -54,7 +54,6 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ResponseEntity<ProblemDetail> handleDataIntegrity(DataIntegrityViolationException ex) {
-        // A mensagem do banco traz o valor duplicado (ex.: e-mail), por isso só a restrição vai para o log
         String restricao = ex.getCause() instanceof org.hibernate.exception.ConstraintViolationException violacao
                 ? violacao.getConstraintName() : "desconhecida";
         log.warn("Violação de integridade dos dados (restrição: {})", restricao);
@@ -103,9 +102,22 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
                                                                   HttpHeaders headers,
                                                                   HttpStatusCode status,
                                                                   WebRequest request) {
-        ProblemDetail problema = problema(HttpStatus.BAD_REQUEST, "Requisição inválida",
-                "O corpo da requisição está ausente ou malformado.", CodigoErro.REQUISICAO_INVALIDA);
+        ProblemDetail problema = campoComValorInvalido(ex)
+                .map(campo -> problemaDeValidacao(List.of(new ErroCampo(campo, "Valor inválido."))))
+                .orElseGet(() -> problema(HttpStatus.BAD_REQUEST, "Requisição inválida",
+                        "O corpo da requisição está ausente ou malformado.", CodigoErro.REQUISICAO_INVALIDA));
         return handleExceptionInternal(ex, problema, headers, HttpStatus.BAD_REQUEST, request);
+    }
+
+    private static Optional<String> campoComValorInvalido(Throwable ex) {
+        for (Throwable causa = ex; causa != null; causa = causa.getCause()) {
+            if (causa instanceof MismatchedInputException erro && !erro.getPath().isEmpty()) {
+                return Optional.of(erro.getPath().stream()
+                        .map(ref -> ref.getPropertyName() != null ? ref.getPropertyName() : "[" + ref.getIndex() + "]")
+                        .collect(Collectors.joining(".")));
+            }
+        }
+        return Optional.empty();
     }
 
     @Override
@@ -129,10 +141,6 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         return handleExceptionInternal(ex, problema, headers, HttpStatus.CONTENT_TOO_LARGE, request);
     }
 
-    /**
-     * Ponto único por onde passam as respostas geradas pela classe base do Spring
-     * (404 de rota inexistente, 405, 415 etc.), garantindo o mesmo formato e idioma.
-     */
     @Override
     protected ResponseEntity<Object> handleExceptionInternal(Exception ex,
                                                              Object body,

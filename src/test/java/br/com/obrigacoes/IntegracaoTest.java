@@ -12,10 +12,6 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.sql.Statement;
 import java.util.List;
 
-/**
- * Base dos testes de integração: contexto completo da aplicação, MySQL real
- * via Testcontainers e banco limpo antes de cada teste.
- */
 @SpringBootTest
 @AutoConfigureMockMvc
 @Import(TestcontainersConfiguration.class)
@@ -34,7 +30,6 @@ public abstract class IntegracaoTest {
                 WHERE table_schema = DATABASE() AND table_name <> 'flyway_schema_history'
                 """, String.class);
 
-        // Executado em uma única conexão, pois FOREIGN_KEY_CHECKS vale por sessão
         jdbcTemplate.execute((ConnectionCallback<Void>) conexao -> {
             try (Statement comando = conexao.createStatement()) {
                 comando.execute("SET FOREIGN_KEY_CHECKS = 0");

@@ -9,10 +9,6 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-/**
- * Valida um CNPJ numérico ou alfanumérico, com ou sem máscara.
- * Valores nulos são considerados válidos; combine com {@code @NotBlank} quando o campo for obrigatório.
- */
 @Documented
 @Constraint(validatedBy = CnpjValidoValidator.class)
 @Target({ElementType.FIELD, ElementType.PARAMETER, ElementType.RECORD_COMPONENT})

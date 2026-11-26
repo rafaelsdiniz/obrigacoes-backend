@@ -11,9 +11,6 @@ import jakarta.persistence.Table;
 
 import java.util.Objects;
 
-/**
- * Colaborador do escritório que pode ser designado como responsável por obrigações.
- */
 @Entity
 @Table(name = "usuario")
 public class Usuario extends EntidadeBase {

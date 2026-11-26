@@ -5,10 +5,6 @@ import org.springframework.data.domain.Page;
 import java.util.List;
 import java.util.function.Function;
 
-/**
- * Contrato estável de paginação exposto pela API, independente da
- * serialização interna do {@link Page} do Spring Data.
- */
 public record PaginaResponse<T>(
         List<T> conteudo,
         int pagina,

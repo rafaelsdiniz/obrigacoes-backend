@@ -4,7 +4,18 @@
 
 API REST para gerenciamento de obrigações de empresas clientes de um escritório de contabilidade.
 
-> Documentação completa em construção. Acompanhe o andamento no [quadro do Trello](https://trello.com/b/lO3pOAnQ/sistema-de-gerenciamento-de-obrigacoes-player).
+## Documentação
+
+| Documento | Conteúdo |
+|---|---|
+| [Requisitos e regras de negócio](docs/01-requisitos.md) | Requisitos funcionais, regras de negócio, validações e requisitos não funcionais |
+| [Arquitetura](docs/02-arquitetura.md) | Visão C4, camadas, modelo de domínio e de dados, implantação, CI/CD e segurança |
+| [API](docs/03-api.md) | Convenções, formato de erros e contrato de cada recurso |
+| [Estratégia de testes](docs/04-estrategia-de-testes.md) | Níveis de teste e cobertura das regras de negócio |
+| [Guia de contribuição](docs/05-guia-de-contribuicao.md) | Fluxo de trabalho, commits, padrões de código e definição de pronto |
+| [Decisões arquiteturais](docs/adr/README.md) | ADRs |
+
+Andamento do desenvolvimento no [quadro do Trello](https://trello.com/b/lO3pOAnQ/sistema-de-gerenciamento-de-obrigacoes-player).
 
 ## Tecnologias
 

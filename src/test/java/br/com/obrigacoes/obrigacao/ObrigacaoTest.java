@@ -48,6 +48,20 @@ class ObrigacaoTest {
     }
 
     @Test
+    void devePermitirExcluirAnexosSomenteAntesDaConclusao() {
+        Obrigacao obrigacao = nova();
+        obrigacao.garantirQuePermiteExcluirAnexos();
+        obrigacao.alterarStatus(EM_ANDAMENTO, AGORA);
+        obrigacao.garantirQuePermiteExcluirAnexos();
+
+        obrigacao.alterarStatus(CONCLUIDA, AGORA);
+
+        assertThatThrownBy(obrigacao::garantirQuePermiteExcluirAnexos)
+                .isInstanceOf(RegraNegocioException.class)
+                .hasMessage("A obrigação está concluída e seus anexos não podem mais ser excluídos.");
+    }
+
+    @Test
     void naoDevePularEtapas() {
         Obrigacao obrigacao = nova();
 

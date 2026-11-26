@@ -2,10 +2,12 @@ package br.com.obrigacoes.usuario;
 
 import br.com.obrigacoes.shared.domain.Textos;
 import br.com.obrigacoes.shared.exception.ConflitoException;
+import br.com.obrigacoes.shared.persistence.Restricoes;
 import br.com.obrigacoes.shared.exception.RecursoNaoEncontradoException;
 import br.com.obrigacoes.shared.exception.RegraNegocioException;
 import br.com.obrigacoes.usuario.dto.UsuarioFiltro;
 import br.com.obrigacoes.usuario.dto.UsuarioRequest;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -16,6 +18,8 @@ import org.springframework.transaction.annotation.Transactional;
 public class UsuarioService {
 
     private static final String RECURSO = "usuário";
+
+    private static final String RESTRICAO_EMAIL = "uk_usuario_email";
 
     private final UsuarioRepository repository;
 
@@ -29,7 +33,11 @@ public class UsuarioService {
         if (repository.existsByEmail(email)) {
             throw emailDuplicado();
         }
-        return repository.save(new Usuario(requisicao.nome(), email, requisicao.cargo()));
+        try {
+            return repository.saveAndFlush(new Usuario(requisicao.nome(), email, requisicao.cargo()));
+        } catch (DataIntegrityViolationException erro) {
+            throw traduzir(erro);
+        }
     }
 
     @Transactional
@@ -41,6 +49,11 @@ public class UsuarioService {
             throw emailDuplicado();
         }
         usuario.atualizarDados(requisicao.nome(), email, requisicao.cargo());
+        try {
+            repository.flush();
+        } catch (DataIntegrityViolationException erro) {
+            throw traduzir(erro);
+        }
         return usuario;
     }
 
@@ -74,6 +87,10 @@ public class UsuarioService {
         Usuario usuario = buscarPorId(id);
         usuario.inativar();
         return usuario;
+    }
+
+    private static RuntimeException traduzir(DataIntegrityViolationException erro) {
+        return Restricoes.violou(erro, RESTRICAO_EMAIL) ? emailDuplicado() : erro;
     }
 
     private static ConflitoException emailDuplicado() {

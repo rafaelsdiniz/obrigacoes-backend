@@ -3,9 +3,11 @@ package br.com.obrigacoes.empresa;
 import br.com.obrigacoes.empresa.dto.EmpresaFiltro;
 import br.com.obrigacoes.empresa.dto.EmpresaRequest;
 import br.com.obrigacoes.shared.exception.ConflitoException;
+import br.com.obrigacoes.shared.persistence.Restricoes;
 import br.com.obrigacoes.shared.exception.RecursoNaoEncontradoException;
 import br.com.obrigacoes.shared.exception.RegraNegocioException;
 import br.com.obrigacoes.shared.validation.Cnpjs;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -16,6 +18,8 @@ import org.springframework.transaction.annotation.Transactional;
 public class EmpresaService {
 
     private static final String RECURSO = "empresa";
+
+    private static final String RESTRICAO_CNPJ = "uk_empresa_cnpj";
 
     private final EmpresaRepository repository;
 
@@ -31,7 +35,11 @@ public class EmpresaService {
         }
         Empresa empresa = new Empresa(requisicao.razaoSocial(), requisicao.nomeFantasia(), cnpj,
                 requisicao.email(), requisicao.telefone());
-        return repository.save(empresa);
+        try {
+            return repository.saveAndFlush(empresa);
+        } catch (DataIntegrityViolationException erro) {
+            throw traduzir(erro);
+        }
     }
 
     @Transactional
@@ -44,6 +52,11 @@ public class EmpresaService {
         }
         empresa.atualizarDados(requisicao.razaoSocial(), requisicao.nomeFantasia(), cnpj,
                 requisicao.email(), requisicao.telefone());
+        try {
+            repository.flush();
+        } catch (DataIntegrityViolationException erro) {
+            throw traduzir(erro);
+        }
         return empresa;
     }
 
@@ -77,6 +90,10 @@ public class EmpresaService {
         Empresa empresa = buscarPorId(id);
         empresa.inativar();
         return empresa;
+    }
+
+    private static RuntimeException traduzir(DataIntegrityViolationException erro) {
+        return Restricoes.violou(erro, RESTRICAO_CNPJ) ? cnpjDuplicado() : erro;
     }
 
     private static ConflitoException cnpjDuplicado() {

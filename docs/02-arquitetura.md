@@ -514,7 +514,7 @@ As imagens são construídas em múltiplos estágios (build e runtime separados)
 | `SERVER_PORT` | api | `8080` | Porta HTTP |
 | `CORS_ALLOWED_ORIGINS` | api | `http://localhost:3000,…` | Origens permitidas |
 | `APP_FUSO_HORARIO` | api | `America/Sao_Paulo` | Fuso usado para "hoje" no cálculo de atraso |
-| `APP_ANEXOS_DIRETORIO` | api | `/app/storage` | Diretório dos anexos |
+| `APP_ANEXOS_DIRETORIO` | api | `storage/anexos` (`/app/storage` no Compose) | Diretório dos anexos |
 | `APP_ANEXOS_TAMANHO_MAXIMO` | api | `10MB` | Tamanho máximo por arquivo |
 | `DB_NAME`, `DB_ROOT_PASSWORD`, `DB_PORT`, `API_PORT`, `APP_PORT` | compose | — | Nome do banco, senha root e portas expostas |
 | `API_URL` | app | `http://localhost:8080` | URL da API usada pelo aplicativo |

@@ -69,6 +69,14 @@ class TipoArquivoTest {
     }
 
     @Test
+    void naoDeveFalharComZipCujoNomeDeEntradaNaoEhUtf8Valido() throws Exception {
+        byte[] corrompido = AmostrasDeArquivo.zipComNomeDeEntradaInvalidoEmUtf8();
+
+        assertThat(TipoArquivo.XLSX.reconhece(new ByteArrayResource(corrompido))).isFalse();
+        assertThat(TipoArquivo.DOCX.reconhece(new ByteArrayResource(corrompido))).isFalse();
+    }
+
+    @Test
     void deveDesistirDeInspecionarZipQueDescompactaAlemDoOrcamento() throws Exception {
         byte[] bomba = AmostrasDeArquivo.zipComPrimeiraEntradaDe(DataSize.ofMegabytes(17), "xl/workbook.xml");
 

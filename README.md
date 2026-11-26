@@ -74,7 +74,7 @@ Todas as variáveis têm valor padrão. Para mudar, copie o [.env.example](.env.
 | `SERVER_PORT` | `8080` | Porta HTTP da API |
 | `CORS_ALLOWED_ORIGINS` | `http://localhost:3000,http://localhost:8081` | Origens autorizadas a chamar a API |
 | `APP_FUSO_HORARIO` | `America/Sao_Paulo` | Fuso do escritório, usado para definir "hoje" no cálculo de atraso |
-| `APP_ANEXOS_DIRETORIO` | `/app/storage` | Diretório onde os anexos são gravados (volume `anexos-data` no Compose) |
+| `APP_ANEXOS_DIRETORIO` | `storage/anexos` | Diretório onde os anexos são gravados. No Compose é `/app/storage`, no volume `anexos-data` |
 | `APP_ANEXOS_TAMANHO_MAXIMO` | `10MB` | Tamanho máximo de cada anexo |
 | `DB_NAME`, `DB_ROOT_PASSWORD`, `DB_PORT`, `API_PORT`, `APP_PORT` | — | Usadas só pelo Compose: nome do banco, senha root e portas expostas |
 | `API_URL_PUBLICA` | `http://localhost:8080` | Endereço da API como o navegador o enxerga, repassado ao aplicativo web |

@@ -22,6 +22,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
+import org.springframework.web.multipart.MultipartException;
 import org.springframework.web.multipart.MultipartFile;
 
 import static org.hamcrest.Matchers.hasSize;
@@ -90,6 +91,13 @@ class GlobalExceptionHandlerTest {
         mockMvc.perform(get("/teste/concorrencia"))
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.codigo").value("CONFLITO"));
+    }
+
+    @Test
+    void deveRetornar400ParaMultipartMalformado() throws Exception {
+        mockMvc.perform(get("/teste/multipart"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.codigo").value("REQUISICAO_INVALIDA"));
     }
 
     @Test
@@ -208,6 +216,11 @@ class GlobalExceptionHandlerTest {
         @GetMapping("/teste/concorrencia")
         void concorrencia() {
             throw new ObjectOptimisticLockingFailureException(Object.class, 1L);
+        }
+
+        @GetMapping("/teste/multipart")
+        void multipartMalformado() {
+            throw new MultipartException("Failed to parse multipart servlet request");
         }
 
         @GetMapping("/teste/bloqueio")

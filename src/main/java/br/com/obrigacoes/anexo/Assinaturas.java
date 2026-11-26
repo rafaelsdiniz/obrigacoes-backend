@@ -48,7 +48,7 @@ final class Assinaturas {
         return arquivo -> {
             try (ZipInputStream zip = new ZipInputStream(arquivo.getInputStream())) {
                 return contemEntradaEm(zip, pasta);
-            } catch (ZipException | EOFException conteudoCorrompido) {
+            } catch (ZipException | EOFException | IllegalArgumentException conteudoCorrompido) {
                 return false;
             }
         };

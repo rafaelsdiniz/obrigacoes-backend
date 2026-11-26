@@ -173,6 +173,37 @@ class AnexoControllerIntegracaoTest extends IntegracaoTest {
     }
 
     @Test
+    void deveRecusarMaisDeUmArquivoPorRequisicaoSemGravarNada() throws Exception {
+        mockMvc.perform(multipart(urlAnexos(obrigacaoId))
+                        .file(new MockMultipartFile("arquivo", "um.pdf", "application/pdf", AmostrasDeArquivo.pdf()))
+                        .file(new MockMultipartFile("arquivo", "dois.pdf", "application/pdf", AmostrasDeArquivo.pdf())))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.codigo").value("REQUISICAO_INVALIDA"))
+                .andExpect(jsonPath("$.detail").value("Envie um único arquivo por requisição."));
+
+        mockMvc.perform(get(urlAnexos(obrigacaoId))).andExpect(jsonPath("$", hasSize(0)));
+        assertThat(arquivosArmazenados()).isZero();
+    }
+
+    @Test
+    void deveRecusarPlanilhaCorrompidaComoArquivoInvalido() throws Exception {
+        anexar(obrigacaoId, "planilha.xlsx", AmostrasDeArquivo.zipComNomeDeEntradaInvalidoEmUtf8())
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.codigo").value("ARQUIVO_INVALIDO"));
+    }
+
+    @Test
+    void deveInformarArquivoIndisponivelQuandoOConteudoSumiuDoArmazenamento() throws Exception {
+        long anexoId = idDe(anexar(obrigacaoId, "guia.pdf", AmostrasDeArquivo.pdf()));
+        FileSystemUtils.deleteRecursively(propriedades.diretorio());
+
+        mockMvc.perform(get(urlAnexos(obrigacaoId) + "/" + anexoId))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.title").value("Arquivo indisponível"))
+                .andExpect(jsonPath("$.detail").value("O arquivo deste anexo não está disponível no armazenamento."));
+    }
+
+    @Test
     void naoDeveExporAnexoPorOutraObrigacao() throws Exception {
         long anexoId = idDe(anexar(obrigacaoId, "guia.pdf", AmostrasDeArquivo.pdf()));
         long outraObrigacao = criarObrigacao("FGTS Digital");

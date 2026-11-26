@@ -1,7 +1,9 @@
 package br.com.obrigacoes.anexo;
 
 import br.com.obrigacoes.anexo.dto.AnexoResponse;
+import br.com.obrigacoes.shared.exception.ParametroInvalidoException;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.core.io.Resource;
 import org.springframework.http.ContentDisposition;
@@ -16,6 +18,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.multipart.MultipartHttpServletRequest;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.nio.charset.StandardCharsets;
@@ -26,6 +29,7 @@ import java.util.List;
 @RequestMapping("/api/v1/obrigacoes/{obrigacaoId}/anexos")
 public class AnexoController {
 
+    private static final String CAMPO_ARQUIVO = "arquivo";
     private static final String SEM_DETECCAO_DE_TIPO = "nosniff";
     private static final String CONTEUDO_ISOLADO = "sandbox";
 
@@ -40,7 +44,11 @@ public class AnexoController {
                     + "conferidos pelo conteúdo do arquivo.")
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<AnexoResponse> anexar(@PathVariable Long obrigacaoId,
-                                                @RequestParam("arquivo") MultipartFile arquivo) {
+                                                @RequestParam(CAMPO_ARQUIVO) MultipartFile arquivo,
+                                                @Parameter(hidden = true) MultipartHttpServletRequest requisicao) {
+        if (requisicao.getFiles(CAMPO_ARQUIVO).size() > 1) {
+            throw new ParametroInvalidoException("Envie um único arquivo por requisição.");
+        }
         AnexoResponse resposta = AnexoResponse.de(service.anexar(obrigacaoId, arquivo));
         var location = ServletUriComponentsBuilder.fromCurrentRequest()
                 .path("/{id}").buildAndExpand(resposta.id()).toUri();

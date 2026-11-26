@@ -5,7 +5,10 @@ import org.springframework.util.unit.DataSize;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.UncheckedIOException;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.nio.charset.StandardCharsets;
+import java.util.zip.CRC32;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -45,6 +48,19 @@ final class AmostrasDeArquivo {
 
     static byte[] executavel() {
         return bytes('M', 'Z', 0x90, 0x00, 0x03, 0x00, 0x00, 0x00);
+    }
+
+    static byte[] zipComNomeDeEntradaInvalidoEmUtf8() {
+        byte[] nome = bytes(0xFF, 0xFE, 0xFD, 0xFC, '.', 'x', 'm', 'l');
+        byte[] dados = "<a/>".getBytes(StandardCharsets.US_ASCII);
+        CRC32 crc = new CRC32();
+        crc.update(dados);
+        ByteBuffer local = ByteBuffer.allocate(30 + nome.length + dados.length).order(ByteOrder.LITTLE_ENDIAN);
+        local.putInt(0x04034b50).putShort((short) 20).putShort((short) 0x800).putShort((short) 0)
+                .putShort((short) 0).putShort((short) 0).putInt((int) crc.getValue())
+                .putInt(dados.length).putInt(dados.length).putShort((short) nome.length).putShort((short) 0)
+                .put(nome).put(dados);
+        return local.array();
     }
 
     static byte[] bytes(int... valores) {

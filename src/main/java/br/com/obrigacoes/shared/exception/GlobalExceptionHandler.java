@@ -23,6 +23,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.method.annotation.HandlerMethodValidationException;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
+import org.springframework.web.multipart.MultipartException;
 import org.springframework.web.multipart.support.MissingServletRequestPartException;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
@@ -69,6 +70,13 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         log.warn("Violação de integridade dos dados (restrição: {})", restricao);
         return responder(problema(HttpStatus.CONFLICT, "Conflito de dados",
                 "A operação viola uma restrição de integridade dos dados.", CodigoErro.CONFLITO));
+    }
+
+    @ExceptionHandler(MultipartException.class)
+    public ResponseEntity<ProblemDetail> handleMultipartMalformado(MultipartException ex) {
+        log.debug("Requisição multipart malformada", ex);
+        return handleApiException(new ParametroInvalidoException(
+                "O envio do arquivo está malformado. Envie um formulário multipart com o arquivo no campo 'arquivo'."));
     }
 
     @ExceptionHandler(Exception.class)

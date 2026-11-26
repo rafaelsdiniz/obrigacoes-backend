@@ -4,8 +4,8 @@
 
 | | |
 |---|---|
-| **Versão** | 1.0 |
-| **Data** | 25/11/2026 |
+| **Versão** | 1.1 |
+| **Data** | 26/11/2026 |
 | **Autor** | rafaelsdiniz |
 | **Modelo** | arc42 (resumido), com diagramas C4 |
 
@@ -14,6 +14,7 @@
 | Versão | Data | Descrição |
 |---|---|---|
 | 1.0 | 25/11/2026 | Versão inicial. |
+| 1.1 | 26/11/2026 | Frontend: painel, obrigações e anexos; regras de tela que complementam as do backend. |
 
 ---
 
@@ -430,10 +431,14 @@ lib/
 │   ├── config/            URL da API: config.json na raiz do site ou --dart-define
 │   ├── dominio/           Json, situação, filtro e termos dos cadastros
 │   ├── estado/            notifiers reaproveitáveis (filtro de listagem)
-│   ├── formatacao/        CNPJ (máscara e validação) e validações de formulário
+│   ├── arquivos/          escolha de arquivo no dispositivo e abertura do download
+│   ├── formatacao/        CNPJ, datas, competência, tamanhos de arquivo e validações de formulário
 │   ├── http/              ClienteApi (Dio), ErroApi, página e parâmetros de listagem
 │   └── widgets/           componentes: cabeçalho, grupo, linhas em colunas, selos, filtros, formulário
 └── features/
+    ├── painel/            indicadores por status e próximos vencimentos
+    ├── obrigacoes/        lista, detalhe com andamento e histórico, formulário, regra de prazo
+    ├── anexos/            envio, lista, download e exclusão de arquivos da obrigação
     ├── empresas/
     │   ├── data/          EmpresaRepository (HTTP ⇄ modelo)
     │   ├── domain/        modelos imutáveis
@@ -449,13 +454,25 @@ lib/
 
 O `ClienteApi` envolve o Dio e converte toda falha em `ErroApi`, com o `codigo` estável e os erros por campo do Problem Details. Os formulários usam esses erros no validador do próprio campo. O "Recarregar" aparece só no conflito de versão, que é um 409 sem erro de campo.
 
+As regras de negócio continuam garantidas pelo backend. O aplicativo as reflete para dar uma experiência melhor:
+
+| Regra | Como o aplicativo trata |
+|---|---|
+| Fluxo de status | O detalhe oferece só a **próxima** ação (iniciar ou concluir), e concluir pede confirmação. Se outra pessoa já avançou (409/422), a tela recarrega a obrigação e o histórico. |
+| Concluída não muda | Sem edição e sem avanço; a rota de edição de uma concluída mostra um aviso em vez do formulário. Anexos ainda podem ser enviados, mas não excluídos. |
+| Inativo sem nova atribuição | Os seletores de empresa e responsável listam só ativos. Na edição, o vínculo atual aparece marcado como inativo, porque a regra vale só para nova atribuição. |
+| Atraso | O campo `atrasada` vem da API, calculado no fuso do escritório. O aplicativo só monta o texto do prazo ("Vence em 3 dias"). |
+| Anexos | O seletor oferece só as extensões aceitas e recusa arquivos acima de 10 MB antes do envio. O download abre o endereço do anexo, e o `Content-Disposition` da API faz o navegador salvar com o nome original. |
+
 ### 6.2 Decisões do frontend
 
 | Tema | Escolha | Motivo |
 |---|---|---|
 | Estado e injeção de dependência | Riverpod | Estado assíncrono declarativo (`AsyncValue`), fácil de substituir em testes, sem depender da árvore de widgets. |
 | Rotas | go_router | Rotas declarativas com URL real na web (deep link, botão voltar). |
-| HTTP | Dio, encapsulado no `ClienteApi` | Tradução de erros em um único ponto, upload multipart com progresso e testes com adaptador falso. |
+| HTTP | Dio, encapsulado no `ClienteApi` | Tradução de erros em um único ponto, upload multipart e testes com adaptador falso. |
+| Arquivos | file_picker e url_launcher atrás de `ArquivosDoDispositivo` | Uma interface única para web e Android, substituída por um falso nos testes. |
+| Identidade visual | Cores da marca Player, tipografia Inter e ícones SVG próprios | Cores de status com significado fixo e sempre acompanhadas de ícone e texto; contraste WCAG AA e alvos de toque de 48 px verificados por testes automáticos. |
 | Configuração | `/config.json` lido em runtime | A mesma imagem Docker serve qualquer ambiente, pois a URL da API vem de variável de ambiente do contêiner. Fora da web vale o `--dart-define`, com `10.0.2.2` como padrão no emulador Android. |
 | Layout | Barra lateral com a marca (telas largas) e `NavigationBar` (celular e tablet), páginas de largura total | Uma única base de código para web e Android; listas viram tabelas com colunas em telas largas e linhas empilhadas no celular. |
 

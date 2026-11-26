@@ -84,7 +84,7 @@ Exemplos: `feat: fluxo de status das obrigações com histórico`, `test: transi
 | Validação | Bean Validation no DTO (formato) e regra no domínio ou serviço (negócio) |
 | Visibilidade | O menor escopo possível: classes auxiliares do módulo são *package-private* |
 | Migrations | Nunca alterar uma migration já integrada; toda mudança é uma nova versão |
-| Formatação | `.editorconfig`: 4 espaços, LF, UTF-8, 120 colunas |
+| Formatação | `.editorconfig`: 4 espaços, LF, UTF-8, 140 colunas |
 
 ### 4.3 Frontend (Dart / Flutter)
 

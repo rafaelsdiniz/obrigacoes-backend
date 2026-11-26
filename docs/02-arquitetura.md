@@ -124,7 +124,14 @@ flowchart TB
 | **Domínio** | Entidades ricas com invariantes e transições (`obrigacao.alterarStatus()`, `obrigacao.atualizarDados()`, `empresa.inativar()`). | Conhecer Spring Web ou DTOs. |
 | **Repository** | Consultas e persistência. Filtros dinâmicos com `Specification`. | Regra de negócio. |
 
-As regras de dependência entre camadas e módulos são verificadas por testes com ArchUnit.
+As regras de dependência são verificadas a cada build por testes com ArchUnit (`ArquiteturaTest`):
+
+- repositórios só são usados por serviços, e controllers nunca acessam repositórios;
+- entidades não dependem de DTOs nem de classes web;
+- serviços não dependem de HTTP (`org.springframework.http`, `web.bind`, `jakarta.servlet`);
+- o pacote `shared` não depende de nenhuma funcionalidade;
+- não há dependência cíclica entre módulos;
+- não há injeção por campo, `System.out` nem `java.util.logging`.
 
 ### 5.3 Modelo de domínio
 

@@ -30,12 +30,21 @@ jobs:
       - name: Compilar, testar e empacotar
         run: ./mvnw -B verify
 
-      - name: Publicar relatórios de teste
+      - name: Resumo da cobertura
+        if: always() && hashFiles('target/site/jacoco/jacoco.csv') != ''
+        run: |
+          awk -F, 'NR > 1 { perdidas += $8; cobertas += $9 }
+            END { printf "### Cobertura de linhas: %.1f%%\n", 100 * cobertas / (perdidas + cobertas) }' \
+            target/site/jacoco/jacoco.csv >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Publicar relatórios de teste e cobertura
         if: always()
         uses: actions/upload-artifact@v7
         with:
           name: relatorios-de-teste
-          path: target/surefire-reports/
+          path: |
+            target/surefire-reports/
+            target/site/jacoco/
           if-no-files-found: ignore
 
   docker:

@@ -3,6 +3,7 @@ package br.com.obrigacoes.obrigacao.dto;
 import br.com.obrigacoes.obrigacao.TipoObrigacao;
 import br.com.obrigacoes.shared.validation.AnoEntre;
 import br.com.obrigacoes.shared.validation.Atualizacao;
+import br.com.obrigacoes.shared.web.DescricoesDaApi;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -37,7 +38,7 @@ public record ObrigacaoRequest(
         @NotNull(message = "O responsável é obrigatório.")
         Long responsavelId,
 
-        @Schema(description = "Versão lida do registro. Obrigatória na atualização para evitar sobrescrever alterações de outra pessoa.")
+        @Schema(description = DescricoesDaApi.VERSAO_DO_REGISTRO)
         @NotNull(groups = Atualizacao.class, message = "A versão do registro é obrigatória na atualização.")
         Long versao
 ) {

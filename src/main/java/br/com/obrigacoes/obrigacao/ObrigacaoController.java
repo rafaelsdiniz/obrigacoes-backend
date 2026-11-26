@@ -83,7 +83,8 @@ public class ObrigacaoController {
     }
 
     @Operation(summary = "Atualiza os dados de uma obrigação",
-            description = "Não altera o status. Obrigações concluídas não podem ser editadas; uma nova empresa ou responsável precisa estar ativo.")
+            description = "Não altera o status. Obrigações concluídas não podem ser editadas; "
+                    + "uma nova empresa ou responsável precisa estar ativo.")
     @PutMapping("/{id}")
     public ObrigacaoResponse atualizar(@PathVariable Long id,
                                        @Validated(Atualizacao.class) @RequestBody ObrigacaoRequest requisicao) {
@@ -91,7 +92,8 @@ public class ObrigacaoController {
     }
 
     @Operation(summary = "Avança o status de uma obrigação",
-            description = "Fluxo permitido: PENDENTE → EM_ANDAMENTO → CONCLUIDA. Não é possível pular etapas, retroceder ou alterar uma obrigação concluída.")
+            description = "Fluxo permitido: PENDENTE → EM_ANDAMENTO → CONCLUIDA. "
+                    + "Não é possível pular etapas, retroceder ou alterar uma obrigação concluída.")
     @PatchMapping("/{id}/status")
     public ObrigacaoResponse alterarStatus(@PathVariable Long id, @Valid @RequestBody AlteracaoStatusRequest requisicao) {
         return ObrigacaoResponse.de(service.alterarStatus(id, requisicao.status()), hoje());

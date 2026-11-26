@@ -175,7 +175,7 @@ classDiagram
     }
     class Anexo {
         String nomeOriginal
-        String tipoConteudo
+        TipoArquivo tipo
         long tamanho
         String chaveArmazenamento
         String hashSha256
@@ -242,6 +242,8 @@ sequenceDiagram
 
 **Enviar um anexo**
 
+A validação e a gravação do arquivo acontecem **fora da transação**, para que uploads lentos não segurem conexões do banco. A transação é curta e só registra o anexo.
+
 ```mermaid
 sequenceDiagram
     autonumber
@@ -253,11 +255,11 @@ sequenceDiagram
     participant Repo as AnexoRepository
     C->>Ctl: POST /obrigacoes/{id}/anexos (multipart)
     Ctl->>Svc: anexar(id, arquivo)
-    Svc->>Svc: busca obrigação (404 se não existir)
-    Svc->>Val: valida vazio, tamanho e assinatura do tipo
-    Svc->>Arm: salvar(conteúdo) → chave UUID + SHA-256
-    Svc->>Repo: save(anexo)
-    alt falha ao gravar no banco
+    Svc->>Svc: verifica a obrigação (404 se não existir)
+    Svc->>Val: valida vazio, tamanho, nome e assinatura do tipo
+    Svc->>Arm: salvar(conteúdo) → chave UUID, tamanho e SHA-256
+    Svc->>Repo: save(anexo) em transação curta
+    alt falha ao registrar
         Svc->>Arm: remover(chave)
         Svc-->>C: erro
     else sucesso
@@ -282,14 +284,15 @@ classDiagram
     ApiException <|-- RegraNegocioException
     ApiException <|-- ParametroInvalidoException
     ApiException <|-- ArquivoInvalidoException
+    ApiException <|-- ArquivoMuitoGrandeException
 ```
 
 | Situação | HTTP | `codigo` |
 |---|---|---|
 | Campos inválidos (Bean Validation) | 400 | `VALIDACAO` (com a lista `erros` por campo) |
-| JSON malformado, parâmetro com tipo errado, ordenação não permitida | 400 | `REQUISICAO_INVALIDA` |
+| JSON malformado, parâmetro ausente ou com tipo errado, ordenação não permitida | 400 | `REQUISICAO_INVALIDA` |
 | Arquivo vazio ou de tipo não permitido | 400 | `ARQUIVO_INVALIDO` |
-| Arquivo acima do limite | 413 | `ARQUIVO_INVALIDO` |
+| Arquivo acima do limite (`ArquivoMuitoGrandeException`, também usada quando o próprio servidor recusa o multipart) | 413 | `ARQUIVO_INVALIDO` |
 | Registro inexistente | 404 | `RECURSO_NAO_ENCONTRADO` |
 | CNPJ ou e-mail duplicado, versão desatualizada, bloqueio concorrente no banco, violação de restrição | 409 | `CONFLITO` |
 | Regra de negócio violada (transição inválida, inativo em atribuição, edição de concluída) | 422 | `REGRA_NEGOCIO` |
@@ -364,26 +367,43 @@ erDiagram
         bigint id PK
         bigint obrigacao_id FK
         varchar nome_original
-        varchar tipo_conteudo
+        varchar tipo
         bigint tamanho
         varchar chave_armazenamento UK
-        char hash_sha256
+        varchar hash_sha256
         datetime criado_em
         datetime atualizado_em
         bigint versao
     }
 ```
 
-**Índices**: situação e nome em empresa e usuário; em obrigação, `data_vencimento` e `(status, data_vencimento)`, que atende a listagem por status e o filtro de atrasadas, além dos índices das chaves estrangeiras; `(obrigacao_id, alterado_em)` no histórico; `obrigacao_id` em anexo.
+**Índices**: situação e nome em empresa e usuário; em obrigação, `data_vencimento` e `(status, data_vencimento)`, que atende a listagem por status e o filtro de atrasadas, além dos índices das chaves estrangeiras; `(obrigacao_id, alterado_em)` no histórico; `(obrigacao_id, criado_em)` em anexo, que atende a listagem do mais recente ao mais antigo.
 
 ### 5.8 Armazenamento de anexos
 
-O conteúdo dos arquivos fica **fora do banco**, e o banco guarda apenas os metadados ([ADR-0007](adr/0007-anexos-fora-do-banco.md)). O acesso passa pela interface `ArmazenamentoArquivos` (`salvar`, `abrir`, `remover`). A implementação atual, `ArmazenamentoLocal`, grava em `${APP_ANEXOS_DIRETORIO}/{obrigacaoId}/{uuid}`, no volume `anexos-data`. Uma implementação S3/MinIO pode substituí-la sem alterar o domínio nem os serviços.
+O conteúdo dos arquivos fica **fora do banco**, e o banco guarda apenas os metadados ([ADR-0007](adr/0007-anexos-fora-do-banco.md)). O acesso passa pela interface `ArmazenamentoArquivos` (`salvar`, `abrir`, `remover`). A implementação atual, `ArmazenamentoLocal`, grava em `${APP_ANEXOS_DIRETORIO}/{obrigacaoId}/{uuid}`, no volume `anexos-data`, e calcula o SHA-256 durante a própria gravação. Uma implementação S3/MinIO pode substituí-la sem alterar o domínio nem os serviços.
+
+| Componente | Responsabilidade |
+|---|---|
+| `ValidadorArquivo` | Arquivo presente e não vazio, tamanho máximo, nome sanitizado (`NomesDeArquivo`) e tipo permitido |
+| `TipoArquivo` | Tipos aceitos, com tipo de conteúdo e assinatura de cada um |
+| `Assinaturas` | Reconhecimento pelo conteúdo: bytes iniciais (PDF, PNG, JPEG), texto sem bytes de controle (CSV, XML) e entradas internas do zip (`xl/` no XLSX, `word/` no DOCX) |
+| `ArmazenamentoLocal` | Gravação, leitura e remoção no disco |
+| `LimpezaDeArquivos` | Remove o arquivo de um anexo excluído **depois do commit**, por evento transacional |
+| `UploadConfig` | Deriva os limites do multipart do servidor de `app.anexos.tamanho-maximo`, fonte única do limite |
+
+Consistência entre banco e disco:
+- **Envio**: se o registro no banco falhar depois de gravar o arquivo, o serviço remove o arquivo antes de propagar o erro.
+- **Exclusão**: o arquivo só é removido depois que a exclusão é confirmada no banco. Se a transação for desfeita, o arquivo continua lá.
+- A remoção é de **melhor esforço**. Uma falha de disco ou a queda do processo entre a gravação e o commit pode deixar um arquivo sem registro, o que é registrado em log e não afeta os dados. A situação inversa, um registro sem arquivo, não acontece nos fluxos normais.
 
 Medidas de segurança:
-- o caminho é montado só com identificadores gerados pelo sistema, e o nome enviado nunca chega ao disco, o que elimina *path traversal*;
-- o tipo é validado pela assinatura do conteúdo;
-- o download usa `Content-Disposition: attachment` com o nome original codificado (RFC 6266) e `X-Content-Type-Options: nosniff`.
+- o caminho é montado só com identificadores gerados pelo sistema, a pasta passa por lista de caracteres permitidos e o caminho final é conferido dentro do diretório raiz, o que elimina *path traversal*;
+- o tipo é validado pela assinatura do conteúdo. A inspeção de zip para em 50 entradas e em 16 MB descompactados, o que protege contra *zip bomb*;
+- o nome é usado só para exibição: caracteres invisíveis (como o U+202E, que inverte a direção do texto e disfarça a extensão) são removidos;
+- o download usa `Content-Disposition: attachment` com o nome original codificado (RFC 6266), `X-Content-Type-Options: nosniff` e `Content-Security-Policy: sandbox`, e o `Content-Type` vem do tipo validado, nunca do cliente.
+
+Limitações conhecidas: CSV e XML são reconhecidos como texto genérico (um HTML renomeado para `.csv` é aceito, mas é sempre baixado como anexo e isolado pelos cabeçalhos acima), e textos em UTF-16 são recusados.
 
 ---
 

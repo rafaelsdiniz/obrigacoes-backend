@@ -48,8 +48,8 @@ Cada regra de negócio tem pelo menos um teste que falha se ela for quebrada.
 | RN-23 a RN-26 | Domínio (parametrizado) | Todas as combinações da matriz de transições |
 | RN-27, RN-28 | Integração e domínio | Requisições simultâneas de mudança de status: só uma é aplicada e o histórico não duplica; histórico registrado na ordem certa |
 | RN-22 | Domínio | Atraso com `Clock` fixo: antes, no dia e depois do vencimento; concluída nunca está atrasada |
-| RN-30, RN-31 | Serviço e integração | Arquivo vazio, acima do limite, extensão falsa (ex.: `.exe` renomeado para `.pdf`) |
-| RN-33 | Serviço | Hash conferido |
+| RN-30, RN-31 | Unidade e integração | Arquivo vazio, acima do limite (inclusive pelo multipart do servidor real), extensão falsa (`.exe` renomeado para `.pdf`), XLSX x DOCX, zip truncado e *zip bomb* |
+| RN-32, RN-33 | Unidade e integração | Nome sem caminho e sem caracteres invisíveis, truncado a 255 caracteres; hash SHA-256 conferido com o calculado no teste; arquivo removido do disco se o registro falhar |
 | RN-34, RN-35 | Integração | Exclusão após conclusão gera `422`; anexo de outra obrigação gera `404` |
 | RN-37 | Integração | Edição com versão antiga gera `409` |
 | RN-39 | Unidade | Campo de ordenação não permitido gera `400`; desempate por id |

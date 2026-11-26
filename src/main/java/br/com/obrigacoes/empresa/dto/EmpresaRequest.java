@@ -2,6 +2,7 @@ package br.com.obrigacoes.empresa.dto;
 
 import br.com.obrigacoes.shared.validation.Atualizacao;
 import br.com.obrigacoes.shared.validation.CnpjValido;
+import br.com.obrigacoes.shared.web.DescricoesDaApi;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -28,7 +29,7 @@ public record EmpresaRequest(
         @Size(max = 20, message = "O telefone deve ter no máximo 20 caracteres.")
         String telefone,
 
-        @Schema(description = "Versão lida do registro. Obrigatória na atualização para evitar sobrescrever alterações de outra pessoa.")
+        @Schema(description = DescricoesDaApi.VERSAO_DO_REGISTRO)
         @NotNull(groups = Atualizacao.class, message = "A versão do registro é obrigatória na atualização.")
         Long versao
 ) {

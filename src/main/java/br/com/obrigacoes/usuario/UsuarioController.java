@@ -79,7 +79,8 @@ public class UsuarioController {
     }
 
     @Operation(summary = "Inativa um usuário",
-            description = "O usuário continua disponível para consulta, mas não pode ser designado a novas obrigações. Operação idempotente.")
+            description = "O usuário continua disponível para consulta, mas não pode ser designado a novas obrigações. "
+                    + "Operação idempotente.")
     @PatchMapping("/{id}/inativar")
     public UsuarioResponse inativar(@PathVariable Long id) {
         return UsuarioResponse.de(service.inativar(id));

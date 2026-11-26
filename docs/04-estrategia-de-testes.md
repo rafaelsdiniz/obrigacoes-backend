@@ -79,7 +79,7 @@ Cada regra de negócio tem pelo menos um teste que falha se ela for quebrada.
 | Todos os testes passando | `./mvnw verify` | `flutter test` |
 | Análise estática sem avisos | compilação com `-Xlint` | `flutter analyze` |
 | Formatação | `.editorconfig` | `dart format --set-exit-if-changed` |
-| Cobertura de linhas medida e publicada | JaCoCo, mínimo de 80% | `lcov`, publicada como artefato |
+| Cobertura de linhas medida e publicada | JaCoCo, mínimo de 90% (build falha abaixo disso) | `lcov`, publicada como artefato |
 | Regras de arquitetura | ArchUnit | — |
 
 ## 7. Execução

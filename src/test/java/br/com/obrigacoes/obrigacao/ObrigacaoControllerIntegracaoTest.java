@@ -75,7 +75,8 @@ class ObrigacaoControllerIntegracaoTest extends IntegracaoTest {
         criar("DCTFWeb", HOJE, empresaId, responsavelId)
                 .andExpect(status().isUnprocessableContent())
                 .andExpect(jsonPath("$.codigo").value("REGRA_NEGOCIO"))
-                .andExpect(jsonPath("$.detail").value("A empresa 'Contábil Alfa LTDA' está inativa e não pode receber novas atribuições."));
+                .andExpect(jsonPath("$.detail")
+                        .value("A empresa 'Contábil Alfa LTDA' está inativa e não pode receber novas atribuições."));
 
         long empresaAtiva = criarEmpresa("Beta Serviços", "11444777000161");
         mockMvc.perform(patch("/api/v1/usuarios/" + responsavelId + "/inativar")).andExpect(status().isOk());

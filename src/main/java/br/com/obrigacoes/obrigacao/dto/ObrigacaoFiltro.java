@@ -6,11 +6,13 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import java.time.LocalDate;
+import java.util.Set;
 
 public record ObrigacaoFiltro(
         @Schema(description = "Trecho do título ou da descrição")
         String busca,
-        StatusObrigacao status,
+        @Schema(description = "Um ou mais status; repita o parâmetro para combinar")
+        Set<StatusObrigacao> status,
         TipoObrigacao tipo,
         Long empresaId,
         Long responsavelId,

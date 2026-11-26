@@ -161,7 +161,7 @@ Erros específicos: `409` para e-mail já cadastrado, com `erros: [{"campo": "em
 | `busca` | texto | Trecho do título ou da descrição |
 | `empresaId` | número | Empresa |
 | `responsavelId` | número | Usuário responsável |
-| `status` | enum | `PENDENTE`, `EM_ANDAMENTO`, `CONCLUIDA` |
+| `status` | enum, pode repetir | `PENDENTE`, `EM_ANDAMENTO`, `CONCLUIDA`; `?status=PENDENTE&status=EM_ANDAMENTO` combina os dois |
 | `tipo` | enum | `FISCAL`, `CONTABIL`, `TRABALHISTA`, `PREVIDENCIARIA`, `SOCIETARIA`, `OUTRA` |
 | `vencimentoDe` / `vencimentoAte` | data | Intervalo de vencimento (inclusivo) |
 | `atrasada` | booleano | Somente atrasadas (`true`) ou somente em dia (`false`) |

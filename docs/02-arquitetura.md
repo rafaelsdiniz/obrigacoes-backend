@@ -15,6 +15,7 @@
 |---|---|---|
 | 1.0 | 25/11/2026 | Versão inicial. |
 | 1.1 | 26/11/2026 | Frontend: painel, obrigações e anexos; regras de tela que complementam as do backend. |
+| 1.2 | 26/11/2026 | Frontend: busca global, filtros da lista, tema claro e escuro e design system. Backend: readiness com banco e análise estática na compilação. |
 
 ---
 
@@ -91,7 +92,7 @@ O código é organizado **por funcionalidade** (*package by feature*), e não po
 ```text
 br.com.obrigacoes
 ├── ObrigacoesApiApplication
-├── config            CORS, OpenAPI, propriedades da aplicação
+├── config            CORS, OpenAPI, relógio com fuso do escritório, auditoria JPA e limites de upload
 ├── empresa           Empresa, EmpresaRepository, EmpresaService, EmpresaController, dto/
 ├── usuario           Usuario, UsuarioRepository, UsuarioService, UsuarioController, dto/
 ├── obrigacao         Obrigacao, StatusObrigacao, TipoObrigacao, HistoricoStatus, ..., dto/
@@ -284,8 +285,9 @@ classDiagram
     direction TB
     class ApiException {
         <<abstract>>
-        status() HttpStatus
-        codigo() CodigoErro
+        getStatus() HttpStatus
+        getTitulo() String
+        getCodigo() CodigoErro
     }
     ApiException <|-- RecursoNaoEncontradoException
     ApiException <|-- ConflitoException
@@ -293,6 +295,7 @@ classDiagram
     ApiException <|-- ParametroInvalidoException
     ApiException <|-- ArquivoInvalidoException
     ApiException <|-- ArquivoMuitoGrandeException
+    ApiException <|-- ArquivoIndisponivelException
 ```
 
 | Situação | HTTP | `codigo` |
@@ -301,7 +304,8 @@ classDiagram
 | JSON malformado, parâmetro ausente ou com tipo errado, ordenação não permitida | 400 | `REQUISICAO_INVALIDA` |
 | Arquivo vazio ou de tipo não permitido | 400 | `ARQUIVO_INVALIDO` |
 | Arquivo acima do limite (`ArquivoMuitoGrandeException`, também usada quando o próprio servidor recusa o multipart) | 413 | `ARQUIVO_INVALIDO` |
-| Registro inexistente | 404 | `RECURSO_NAO_ENCONTRADO` |
+| Registro ou rota inexistente, arquivo de anexo indisponível no armazenamento (`ArquivoIndisponivelException`) | 404 | `RECURSO_NAO_ENCONTRADO` |
+| Método HTTP não suportado ou tipo de conteúdo não aceito | 405 ou 415 | `REQUISICAO_INVALIDA` |
 | CNPJ ou e-mail duplicado, versão desatualizada, bloqueio concorrente no banco, violação de restrição | 409 | `CONFLITO` |
 | Regra de negócio violada (transição inválida, inativo em atribuição, edição de concluída) | 422 | `REGRA_NEGOCIO` |
 | Erro inesperado (registrado em log, sem detalhes na resposta) | 500 | `ERRO_INTERNO` |
@@ -424,21 +428,22 @@ Organização por funcionalidade, com camadas internas ([ADR-0008](adr/0008-arqu
 ```text
 lib/
 ├── main.dart              carrega a configuração e inicia o app
-├── app/                   MaterialApp, roteador (go_router) e navegação (barra lateral ou inferior)
+├── app/                   MaterialApp, roteador (go_router) e navegação (barra lateral, barra superior com busca e tema, barra inferior)
 ├── core/
-│   ├── tema/              identidade visual: cores da marca, raios e tema (tipografia Inter)
-│   ├── layout/            pontos de quebra e margens responsivas
+│   ├── tema/              paleta clara e escura, tokens de raio, fonte e movimento, preferência de tema salva
+│   ├── layout/            pontos de quebra, largura da página, altura dos controles e margens
 │   ├── config/            URL da API: config.json na raiz do site ou --dart-define
 │   ├── dominio/           Json, situação, filtro e termos dos cadastros
-│   ├── estado/            notifiers reaproveitáveis (filtro de listagem)
-│   ├── arquivos/          escolha de arquivo no dispositivo e abertura do download
+│   ├── estado/            filtro reaproveitável dos cadastros e aviso de alteração entre telas
+│   ├── arquivos/          escolha de arquivo, arrastar e soltar e abertura do download
 │   ├── formatacao/        CNPJ, datas, competência, tamanhos de arquivo e validações de formulário
 │   ├── http/              ClienteApi (Dio), ErroApi, página e parâmetros de listagem
-│   └── widgets/           componentes: cabeçalho, grupo, linhas em colunas, selos, filtros, formulário
+│   └── widgets/           componentes: cabeçalhos, trilha, cartões, filtros e menus, listas, formulários
 └── features/
     ├── painel/            indicadores por status e próximos vencimentos
-    ├── obrigacoes/        lista, detalhe com andamento e histórico, formulário, regra de prazo
-    ├── anexos/            envio, lista, download e exclusão de arquivos da obrigação
+    ├── obrigacoes/        lista com filtros e ordenação, detalhe com etapas e histórico, formulário, regra de prazo
+    ├── anexos/            área de envio (seletor ou arrastar), lista, download e exclusão
+    ├── busca/             busca global em obrigações, empresas e usuários
     ├── empresas/
     │   ├── data/          EmpresaRepository (HTTP ⇄ modelo)
     │   ├── domain/        modelos imutáveis
@@ -462,7 +467,8 @@ As regras de negócio continuam garantidas pelo backend. O aplicativo as reflete
 | Concluída não muda | Sem edição e sem avanço; a rota de edição de uma concluída mostra um aviso em vez do formulário. Anexos ainda podem ser enviados, mas não excluídos. |
 | Inativo sem nova atribuição | Os seletores de empresa e responsável listam só ativos. Na edição, o vínculo atual aparece marcado como inativo, porque a regra vale só para nova atribuição. |
 | Atraso | O campo `atrasada` vem da API, calculado no fuso do escritório. O aplicativo só monta o texto do prazo ("Vence em 3 dias"). |
-| Anexos | O seletor oferece só as extensões aceitas e recusa arquivos acima de 10 MB antes do envio. O download abre o endereço do anexo, e o `Content-Disposition` da API faz o navegador salvar com o nome original. |
+| Anexos | O seletor oferece só as extensões aceitas; arquivos arrastados passam pela mesma conferência de extensão e tamanho (10 MB) antes do envio. O download abre o endereço do anexo, e o `Content-Disposition` da API faz o navegador salvar com o nome original. |
+| Inativos consultáveis | Os filtros da lista de obrigações oferecem também empresas e responsáveis inativos, marcados como tal, porque a regra só impede **novas** atribuições. |
 
 ### 6.2 Decisões do frontend
 
@@ -472,7 +478,8 @@ As regras de negócio continuam garantidas pelo backend. O aplicativo as reflete
 | Rotas | go_router | Rotas declarativas com URL real na web (deep link, botão voltar). |
 | HTTP | Dio, encapsulado no `ClienteApi` | Tradução de erros em um único ponto, upload multipart e testes com adaptador falso. |
 | Arquivos | file_picker e url_launcher atrás de `ArquivosDoDispositivo` | Uma interface única para web e Android, substituída por um falso nos testes. |
-| Identidade visual | Cores da marca Player, tipografia Inter e ícones SVG próprios | Cores de status com significado fixo e sempre acompanhadas de ícone e texto; contraste WCAG AA e alvos de toque de 48 px verificados por testes automáticos. |
+| Identidade visual | Paleta própria (marinho da marca, amarelo da logo como acento), temas claro e escuro, tipografia Inter e ícones SVG próprios | Poucos tokens (raio, altura de controle, tamanho de ícone, largura de página) garantem que todas as telas tenham a mesma forma. Cores de status com significado fixo e sempre acompanhadas de ícone e texto; contraste WCAG AA nos dois temas e alvos de toque de 48 px verificados por testes automáticos. |
+| Busca global | Um campo na barra superior consulta obrigações, empresas e usuários em paralelo | Atalho `/`, navegação por teclado e tela cheia no celular; reaproveita os endpoints de listagem, sem endpoint novo na API. |
 | Configuração | `/config.json` lido em runtime | A mesma imagem Docker serve qualquer ambiente, pois a URL da API vem de variável de ambiente do contêiner. Fora da web vale o `--dart-define`, com `10.0.2.2` como padrão no emulador Android. |
 | Layout | Barra lateral com a marca (telas largas) e `NavigationBar` (celular e tablet), páginas de largura total | Uma única base de código para web e Android; listas viram tabelas com colunas em telas largas e linhas empilhadas no celular. |
 
@@ -499,7 +506,7 @@ flowchart LR
 | Serviço | Imagem | Saúde | Dependência |
 |---|---|---|---|
 | `mysql` | `mysql:8.4` | `mysqladmin ping` | — |
-| `api` | `ghcr.io/rafaelsdiniz/obrigacoes-backend` (ou build local) | `/actuator/health/readiness` | `mysql` saudável |
+| `api` | build local deste repositório (`obrigacoes-api:local`); a CI publica a mesma imagem em `ghcr.io/rafaelsdiniz/obrigacoes-backend` | `/actuator/health/readiness` (inclui o banco) | `mysql` saudável |
 | `app` | `ghcr.io/rafaelsdiniz/obrigacoes-frontend` | resposta HTTP do nginx | `api` saudável |
 
 As imagens são construídas em múltiplos estágios (build e runtime separados), rodam com usuário sem privilégios e têm `HEALTHCHECK`.
@@ -517,7 +524,7 @@ As imagens são construídas em múltiplos estágios (build e runtime separados)
 | `APP_ANEXOS_DIRETORIO` | api | `storage/anexos` (`/app/storage` no Compose) | Diretório dos anexos |
 | `APP_ANEXOS_TAMANHO_MAXIMO` | api | `10MB` | Tamanho máximo por arquivo |
 | `DB_NAME`, `DB_ROOT_PASSWORD`, `DB_PORT`, `API_PORT`, `APP_PORT` | compose | — | Nome do banco, senha root e portas expostas |
-| `API_URL` | app | `http://localhost:8080` | URL da API usada pelo aplicativo |
+| `API_URL_PUBLICA` | compose (vira `API_URL` no app) | `http://localhost:8080` | Endereço da API como o navegador o enxerga |
 
 ---
 
@@ -525,14 +532,14 @@ As imagens são construídas em múltiplos estágios (build e runtime separados)
 
 ```mermaid
 flowchart LR
-    push([push ou pull request]) --> build["Compilar e testar<br>./mvnw verify<br>(unitários + Testcontainers + JaCoCo + ArchUnit)"]
+    push([pull request ou push na main]) --> build["Compilar e testar<br>./mvnw verify<br>(-Xlint -Werror + unitários + Testcontainers + JaCoCo + ArchUnit)"]
     build --> docker["Build da imagem Docker"]
     docker -- "somente na main" --> ghcr[("GitHub Container Registry")]
 ```
 
 | Repositório | Etapas |
 |---|---|
-| Backend | Compilação, testes unitários e de integração, relatório de cobertura, build da imagem e publicação no GHCR com as tags `latest` e SHA curto. |
+| Backend | Compilação com `-Xlint:all -Werror`, testes unitários e de integração, ArchUnit, cobertura mínima de 90%, build da imagem e publicação no GHCR com as tags `latest` e SHA curto. |
 | Frontend | `dart format --set-exit-if-changed`, `flutter analyze`, `flutter test --coverage`, `flutter build web`, build da imagem e publicação no GHCR. |
 
 Pull requests só são integrados com o pipeline verde.

@@ -267,7 +267,7 @@ stateDiagram-v2
 | RNF-01 | Tecnologia | Backend em Java 21 com Spring Boot. Banco de dados MySQL. Frontend em Flutter. |
 | RNF-02 | Persistência | A estrutura do banco é versionada por migrations Flyway, executadas automaticamente na inicialização da aplicação. O Hibernate apenas valida o esquema e nunca o altera. |
 | RNF-03 | Infraestrutura | Todos os serviços (banco, API e aplicativo web) sobem com um único `docker compose up`. |
-| RNF-04 | CI/CD | Cada push e pull request executa compilação, análise estática, testes e build da imagem Docker no GitHub Actions. A imagem é publicada no registro a cada merge na `main`. |
+| RNF-04 | CI/CD | Cada pull request e cada push na `main` executam no GitHub Actions a compilação com análise estática (`-Xlint` com avisos tratados como erro), os testes, a verificação de arquitetura (ArchUnit), a cobertura mínima (JaCoCo) e o build da imagem Docker. A imagem é publicada no registro a cada merge na `main`. |
 | RNF-05 | API | API REST versionada (`/api/v1`), JSON em UTF-8, documentada em OpenAPI com Swagger UI. |
 | RNF-06 | Erros | Todas as respostas de erro seguem a RFC 7807 (Problem Details), com código de erro estável e, em validações, a lista de erros por campo. Detalhes internos (stack trace, SQL) nunca são expostos. |
 | RNF-07 | Integridade | Unicidade, chaves estrangeiras e valores permitidos são garantidos também por restrições no banco, não só pela aplicação. |

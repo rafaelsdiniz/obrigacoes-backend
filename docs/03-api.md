@@ -26,7 +26,7 @@ O Swagger é gerado a partir do código e é a fonte de verdade dos detalhes de 
 | Enums | Constantes em maiúsculas (`ATIVO`, `EM_ANDAMENTO`) |
 | Criação | `201 Created` com cabeçalho `Location` e o recurso no corpo |
 | Edição | `PUT` com o recurso completo e o campo `versao` |
-| Ações de estado | `PATCH /{id}/{acao}` sem corpo, devolvendo o recurso atualizado |
+| Ações de estado | `PATCH /{id}/{acao}`, devolvendo o recurso atualizado. Ativar e inativar não têm corpo; a mudança de status recebe `{ "status": ... }` |
 
 ### 1.1 Paginação
 
@@ -48,15 +48,13 @@ Formato RFC 7807, com `Content-Type: application/problem+json`:
 
 ```json
 {
-  "type": "about:blank",
   "title": "Dados inválidos",
   "status": 400,
   "detail": "Um ou mais campos estão inválidos.",
-  "instance": "/api/v1/empresas",
   "codigo": "VALIDACAO",
   "timestamp": "2026-11-25T14:30:00.123Z",
   "erros": [
-    { "campo": "cnpj", "mensagem": "O CNPJ informado é inválido." }
+    { "campo": "cnpj", "mensagem": "CNPJ inválido." }
   ]
 }
 ```
@@ -66,9 +64,11 @@ Formato RFC 7807, com `Content-Type: application/problem+json`:
 | 400 | `VALIDACAO` | Campos inválidos (inclui `erros`) |
 | 400 | `REQUISICAO_INVALIDA` | Corpo malformado, parâmetro ausente ou de tipo incorreto, ordenação não permitida |
 | 400 | `ARQUIVO_INVALIDO` | Arquivo vazio ou de tipo não permitido |
-| 404 | `RECURSO_NAO_ENCONTRADO` | Registro inexistente |
+| 404 | `RECURSO_NAO_ENCONTRADO` | Registro ou rota inexistente, ou arquivo de anexo indisponível no armazenamento |
+| 405 | `REQUISICAO_INVALIDA` | Método HTTP não suportado pela rota |
 | 409 | `CONFLITO` | Duplicidade (com `erros` indicando o campo) ou versão desatualizada (sem `erros`) |
 | 413 | `ARQUIVO_INVALIDO` | Arquivo acima do tamanho máximo |
+| 415 | `REQUISICAO_INVALIDA` | Tipo de conteúdo não suportado (por exemplo, upload que não é `multipart/form-data`) |
 | 422 | `REGRA_NEGOCIO` | Regra de negócio violada |
 | 500 | `ERRO_INTERNO` | Erro inesperado |
 
@@ -284,9 +284,10 @@ O parâmetro `filename` traz uma versão ASCII do nome para clientes antigos, e 
 | HTTP | Situação |
 |---|---|
 | 400 | `ARQUIVO_INVALIDO`: arquivo vazio, de tipo não permitido ou com conteúdo que não corresponde à extensão |
-| 400 | `REQUISICAO_INVALIDA`: campo `arquivo` ausente |
-| 404 | Obrigação inexistente ou anexo que não pertence à obrigação |
+| 400 | `REQUISICAO_INVALIDA`: campo `arquivo` ausente, mais de um arquivo no envio ou multipart malformado |
+| 404 | Obrigação inexistente, anexo que não pertence à obrigação ou arquivo indisponível no armazenamento |
 | 413 | Arquivo acima do tamanho máximo |
+| 415 | Corpo que não é `multipart/form-data` |
 | 422 | Exclusão de anexo de obrigação concluída |
 
 ---

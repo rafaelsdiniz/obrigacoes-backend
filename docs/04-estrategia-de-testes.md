@@ -61,7 +61,7 @@ Cada regra de negócio tem pelo menos um teste que falha se ela for quebrada.
 - **Um comportamento por teste.** Variações de entrada usam `@ParameterizedTest`.
 - Testes **independentes**: cada teste de integração cria os próprios dados e não depende da ordem de execução.
 - **Tempo controlado**: código que depende da data atual recebe um `Clock`, fixado nos testes.
-- Contêiner do MySQL **reutilizado** entre classes de teste (`@ServiceConnection` com contêiner singleton) para manter a suíte rápida.
+- Contêiner do MySQL **reutilizado** entre as classes de teste que compartilham o mesmo contexto do Spring (cache de contexto com `@ServiceConnection`), para manter a suíte rápida. O teste do limite de upload usa um contexto próprio e, por isso, um segundo contêiner.
 - Sem `Thread.sleep` nem dependência de rede externa.
 
 ## 5. Frontend
@@ -80,7 +80,7 @@ Os testes de tela sobem o aplicativo inteiro com os repositórios substituídos 
 | Critério | Backend | Frontend |
 |---|---|---|
 | Todos os testes passando | `./mvnw verify` | `flutter test` |
-| Análise estática sem avisos | compilação com `-Xlint` | `flutter analyze` |
+| Análise estática sem avisos | compilação com `-Xlint:all` e `-Werror` | `flutter analyze` |
 | Formatação | `.editorconfig` | `dart format --set-exit-if-changed` |
 | Cobertura de linhas medida e publicada | JaCoCo, mínimo de 90% (build falha abaixo disso) | `lcov`, mínimo de 80% (CI falha abaixo disso) |
 | Regras de arquitetura | ArchUnit | — |

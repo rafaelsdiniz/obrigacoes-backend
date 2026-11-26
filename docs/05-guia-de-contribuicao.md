@@ -83,7 +83,7 @@ Exemplos: `feat: fluxo de status das obrigações com histórico`, `test: transi
 | Exceções | Subclasses de `ApiException`; nunca capturar e ignorar |
 | Validação | Bean Validation no DTO (formato) e regra no domínio ou serviço (negócio) |
 | Visibilidade | O menor escopo possível: classes auxiliares do módulo são *package-private* |
-| Migrations | Nunca alterar uma migration já integrada; toda mudança é uma nova versão |
+| Migrations | Nunca alterar uma migration já integrada; toda mudança é uma nova versão. É o único lugar com comentário: as V1 e V2 explicam a colação binária das colunas únicas, e removê-lo mudaria o checksum de migrations já aplicadas |
 | Formatação | `.editorconfig`: 4 espaços, LF, UTF-8, 140 colunas |
 
 ### 4.3 Frontend (Dart / Flutter)
@@ -96,6 +96,7 @@ Exemplos: `feat: fluxo de status das obrigações com histórico`, `test: transi
 | Estado | Riverpod; nada de `setState` para dados vindos da API |
 | Modelos | Imutáveis, com `deJson` e `paraJson` |
 | Arquivos | `snake_case.dart`, um widget público por arquivo |
+| Estilo visual | Só os tokens do design system: `context.cores` para cor, `Raios`, `Medidas` (largura da página, altura de controle) e `TamanhosDeIcone`; nada de cor, raio ou tamanho fixo na tela |
 
 ## 5. Pull requests
 

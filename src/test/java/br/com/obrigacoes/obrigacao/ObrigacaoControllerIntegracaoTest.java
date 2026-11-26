@@ -300,6 +300,9 @@ class ObrigacaoControllerIntegracaoTest extends IntegracaoTest {
         mockMvc.perform(get(URL).param("status", "EM_ANDAMENTO"))
                 .andExpect(jsonPath("$.conteudo[*].id", containsInAnyOrder((int) emAndamento)));
 
+        mockMvc.perform(get(URL).param("status", "PENDENTE", "EM_ANDAMENTO"))
+                .andExpect(jsonPath("$.conteudo[*].id", containsInAnyOrder((int) atrasada, (int) emAndamento)));
+
         mockMvc.perform(get(URL).param("empresaId", String.valueOf(outraEmpresa)))
                 .andExpect(jsonPath("$.conteudo[*].titulo", containsInAnyOrder("EFD-Reinf")));
 

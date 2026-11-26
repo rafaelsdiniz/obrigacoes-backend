@@ -423,14 +423,16 @@ Organização por funcionalidade, com camadas internas ([ADR-0008](adr/0008-arqu
 ```text
 lib/
 ├── main.dart              carrega a configuração e inicia o app
-├── app/                   MaterialApp, tema, roteador (go_router) e navegação responsiva
+├── app/                   MaterialApp, roteador (go_router) e navegação (barra lateral ou inferior)
 ├── core/
+│   ├── tema/              identidade visual: cores da marca, raios e tema (tipografia Inter)
+│   ├── layout/            pontos de quebra e margens responsivas
 │   ├── config/            URL da API: config.json na raiz do site ou --dart-define
 │   ├── dominio/           Json, situação, filtro e termos dos cadastros
 │   ├── estado/            notifiers reaproveitáveis (filtro de listagem)
 │   ├── formatacao/        CNPJ (máscara e validação) e validações de formulário
 │   ├── http/              ClienteApi (Dio), ErroApi, página e parâmetros de listagem
-│   └── widgets/           estados de tela, lista paginada, filtros, formulário e avisos
+│   └── widgets/           componentes: cabeçalho, grupo, linhas em colunas, selos, filtros, formulário
 └── features/
     ├── empresas/
     │   ├── data/          EmpresaRepository (HTTP ⇄ modelo)
@@ -455,7 +457,7 @@ O `ClienteApi` envolve o Dio e converte toda falha em `ErroApi`, com o `codigo` 
 | Rotas | go_router | Rotas declarativas com URL real na web (deep link, botão voltar). |
 | HTTP | Dio, encapsulado no `ClienteApi` | Tradução de erros em um único ponto, upload multipart com progresso e testes com adaptador falso. |
 | Configuração | `/config.json` lido em runtime | A mesma imagem Docker serve qualquer ambiente, pois a URL da API vem de variável de ambiente do contêiner. Fora da web vale o `--dart-define`, com `10.0.2.2` como padrão no emulador Android. |
-| Layout | `NavigationRail` (telas largas) e `NavigationBar` (celular) | Uma única base de código para web e Android. |
+| Layout | Barra lateral com a marca (telas largas) e `NavigationBar` (celular e tablet), páginas de largura total | Uma única base de código para web e Android; listas viram tabelas com colunas em telas largas e linhas empilhadas no celular. |
 
 ---
 

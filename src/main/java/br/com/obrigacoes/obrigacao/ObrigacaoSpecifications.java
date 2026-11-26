@@ -17,8 +17,8 @@ final class ObrigacaoSpecifications {
     static Specification<Obrigacao> com(ObrigacaoFiltro filtro, LocalDate hoje) {
         List<Specification<Obrigacao>> condicoes = new ArrayList<>();
 
-        if (filtro.status() != null) {
-            condicoes.add(comStatus(filtro.status()));
+        if (filtro.status() != null && !filtro.status().isEmpty()) {
+            condicoes.add((raiz, consulta, cb) -> raiz.get("status").in(filtro.status()));
         }
         if (filtro.tipo() != null) {
             condicoes.add((raiz, consulta, cb) -> cb.equal(raiz.get("tipo"), filtro.tipo()));

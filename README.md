@@ -35,6 +35,7 @@ docker compose up -d --build
 
 | Serviço | Endereço |
 |---|---|
+| Aplicativo web | http://localhost:3000 |
 | API | http://localhost:8080 |
 | Swagger UI | http://localhost:8080/swagger-ui.html |
 | Health check | http://localhost:8080/actuator/health |

@@ -1,5 +1,7 @@
 package br.com.obrigacoes.anexo;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Component;
@@ -20,6 +22,8 @@ import java.util.regex.Pattern;
 class ArmazenamentoLocal implements ArmazenamentoArquivos {
 
     private static final Pattern PASTA_VALIDA = Pattern.compile("[A-Za-z0-9_-]+");
+
+    private static final Logger log = LoggerFactory.getLogger(ArmazenamentoLocal.class);
 
     private final Path raiz;
 
@@ -52,7 +56,8 @@ class ArmazenamentoLocal implements ArmazenamentoArquivos {
     public Resource abrir(String chave) {
         Path arquivo = resolver(chave);
         if (!Files.isRegularFile(arquivo)) {
-            throw new IllegalStateException("Arquivo ausente no armazenamento: " + chave);
+            log.warn("Arquivo de anexo ausente no armazenamento (chave: {})", chave);
+            throw new ArquivoIndisponivelException();
         }
         return new FileSystemResource(arquivo);
     }

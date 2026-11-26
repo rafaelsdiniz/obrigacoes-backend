@@ -62,7 +62,8 @@ class ArmazenamentoLocalTest {
     @Test
     void deveFalharAoAbrirArquivoAusente() {
         assertThatThrownBy(() -> armazenamento.abrir("7/inexistente"))
-                .isInstanceOf(IllegalStateException.class);
+                .isInstanceOf(ArquivoIndisponivelException.class)
+                .hasMessage("O arquivo deste anexo não está disponível no armazenamento.");
     }
 
     @Test

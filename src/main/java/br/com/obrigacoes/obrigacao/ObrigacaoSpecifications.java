@@ -3,9 +3,6 @@ package br.com.obrigacoes.obrigacao;
 import br.com.obrigacoes.obrigacao.dto.ObrigacaoFiltro;
 import br.com.obrigacoes.shared.domain.Textos;
 import br.com.obrigacoes.shared.persistence.Consultas;
-import jakarta.persistence.criteria.CriteriaBuilder;
-import jakarta.persistence.criteria.Predicate;
-import jakarta.persistence.criteria.Root;
 import org.springframework.data.jpa.domain.Specification;
 
 import java.time.LocalDate;
@@ -21,17 +18,12 @@ final class ObrigacaoSpecifications {
         List<Specification<Obrigacao>> condicoes = new ArrayList<>();
 
         if (filtro.status() != null) {
-            condicoes.add((raiz, consulta, cb) -> cb.equal(raiz.get("status"), filtro.status()));
+            condicoes.add(comStatus(filtro.status()));
         }
         if (filtro.tipo() != null) {
             condicoes.add((raiz, consulta, cb) -> cb.equal(raiz.get("tipo"), filtro.tipo()));
         }
-        if (filtro.empresaId() != null) {
-            condicoes.add((raiz, consulta, cb) -> cb.equal(raiz.get("empresa").get("id"), filtro.empresaId()));
-        }
-        if (filtro.responsavelId() != null) {
-            condicoes.add((raiz, consulta, cb) -> cb.equal(raiz.get("responsavel").get("id"), filtro.responsavelId()));
-        }
+        condicoes.add(doEscopo(filtro.empresaId(), filtro.responsavelId()));
         if (filtro.vencimentoDe() != null) {
             condicoes.add((raiz, consulta, cb) ->
                     cb.greaterThanOrEqualTo(raiz.get("dataVencimento"), filtro.vencimentoDe()));
@@ -41,9 +33,7 @@ final class ObrigacaoSpecifications {
                     cb.lessThanOrEqualTo(raiz.get("dataVencimento"), filtro.vencimentoAte()));
         }
         if (filtro.atrasada() != null) {
-            condicoes.add((raiz, consulta, cb) -> filtro.atrasada()
-                    ? atrasada(raiz, cb, hoje)
-                    : cb.not(atrasada(raiz, cb, hoje)));
+            condicoes.add(filtro.atrasada() ? atrasadas(hoje) : Specification.not(atrasadas(hoje)));
         }
 
         String busca = Textos.limparOuNulo(filtro.busca());
@@ -58,8 +48,23 @@ final class ObrigacaoSpecifications {
         return Specification.allOf(condicoes);
     }
 
-    private static Predicate atrasada(Root<Obrigacao> raiz, CriteriaBuilder cb, LocalDate hoje) {
-        return cb.and(
+    static Specification<Obrigacao> doEscopo(Long empresaId, Long responsavelId) {
+        List<Specification<Obrigacao>> condicoes = new ArrayList<>();
+        if (empresaId != null) {
+            condicoes.add((raiz, consulta, cb) -> cb.equal(raiz.get("empresa").get("id"), empresaId));
+        }
+        if (responsavelId != null) {
+            condicoes.add((raiz, consulta, cb) -> cb.equal(raiz.get("responsavel").get("id"), responsavelId));
+        }
+        return Specification.allOf(condicoes);
+    }
+
+    static Specification<Obrigacao> comStatus(StatusObrigacao status) {
+        return (raiz, consulta, cb) -> cb.equal(raiz.get("status"), status);
+    }
+
+    static Specification<Obrigacao> atrasadas(LocalDate hoje) {
+        return (raiz, consulta, cb) -> cb.and(
                 cb.lessThan(raiz.get("dataVencimento"), hoje),
                 cb.notEqual(raiz.get("status"), StatusObrigacao.CONCLUIDA)
         );

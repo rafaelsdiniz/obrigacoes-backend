@@ -5,6 +5,8 @@ import br.com.obrigacoes.obrigacao.dto.HistoricoStatusResponse;
 import br.com.obrigacoes.obrigacao.dto.ObrigacaoFiltro;
 import br.com.obrigacoes.obrigacao.dto.ObrigacaoRequest;
 import br.com.obrigacoes.obrigacao.dto.ObrigacaoResponse;
+import br.com.obrigacoes.obrigacao.dto.ResumoObrigacoesFiltro;
+import br.com.obrigacoes.obrigacao.dto.ResumoObrigacoesResponse;
 import br.com.obrigacoes.shared.validation.Atualizacao;
 import br.com.obrigacoes.shared.web.PaginaResponse;
 import br.com.obrigacoes.shared.web.Paginacao;
@@ -65,6 +67,13 @@ public class ObrigacaoController {
         LocalDate hoje = hoje();
         return PaginaResponse.de(service.listar(filtro, hoje, Paginacao.validar(paginacao, CAMPOS_ORDENACAO)),
                 obrigacao -> ObrigacaoResponse.de(obrigacao, hoje));
+    }
+
+    @Operation(summary = "Resume as obrigações por status e as atrasadas",
+            description = "Pode ser restrito a uma empresa e/ou a um responsável.")
+    @GetMapping("/resumo")
+    public ResumoObrigacoesResponse resumir(@ParameterObject ResumoObrigacoesFiltro filtro) {
+        return ResumoObrigacoesResponse.de(service.resumir(filtro, hoje()));
     }
 
     @Operation(summary = "Consulta uma obrigação pelo id")

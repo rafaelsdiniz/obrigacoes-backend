@@ -13,6 +13,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Clock;
@@ -71,8 +72,7 @@ public class ObrigacaoService {
 
     @Transactional
     public Obrigacao alterarStatus(Long id, StatusObrigacao novoStatus) {
-        Obrigacao obrigacao = repository.buscarComBloqueio(id)
-                .orElseThrow(() -> new RecursoNaoEncontradoException(RECURSO, id));
+        Obrigacao obrigacao = buscarComBloqueio(id);
         obrigacao.alterarStatus(novoStatus, Instant.now(clock));
         Hibernate.initialize(obrigacao.getEmpresa());
         Hibernate.initialize(obrigacao.getResponsavel());
@@ -84,10 +84,25 @@ public class ObrigacaoService {
                 .orElseThrow(() -> new RecursoNaoEncontradoException(RECURSO, id));
     }
 
-    public List<HistoricoStatusObrigacao> listarHistorico(Long id) {
+    @Transactional(propagation = Propagation.MANDATORY)
+    public Obrigacao buscarComBloqueio(Long id) {
+        return repository.buscarComBloqueio(id)
+                .orElseThrow(() -> new RecursoNaoEncontradoException(RECURSO, id));
+    }
+
+    @Transactional(propagation = Propagation.MANDATORY)
+    public Obrigacao referenciaPara(Long id) {
+        return repository.getReferenceById(id);
+    }
+
+    public void verificarExistencia(Long id) {
         if (!repository.existsById(id)) {
             throw new RecursoNaoEncontradoException(RECURSO, id);
         }
+    }
+
+    public List<HistoricoStatusObrigacao> listarHistorico(Long id) {
+        verificarExistencia(id);
         return historicoRepository.findByObrigacaoIdOrderByAlteradoEmAscIdAsc(id);
     }
 

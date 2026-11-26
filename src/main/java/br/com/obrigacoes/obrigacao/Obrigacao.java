@@ -91,6 +91,12 @@ public class Obrigacao extends EntidadeBase {
         this.status = novoStatus;
     }
 
+    public void garantirQuePermiteExcluirAnexos() {
+        if (status.isFinal()) {
+            throw new RegraNegocioException("A obrigação está concluída e seus anexos não podem mais ser excluídos.");
+        }
+    }
+
     public boolean isAtrasada(LocalDate hoje) {
         return !status.isFinal() && dataVencimento.isBefore(hoje);
     }

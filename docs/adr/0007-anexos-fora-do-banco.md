@@ -12,7 +12,7 @@ Cada obrigação pode ter vários documentos (PDF, imagens, XML, planilhas). É 
 - O acesso passa pela interface `ArmazenamentoArquivos`. A primeira implementação grava em disco local, no volume Docker `anexos-data`.
 - O arquivo é gravado com uma chave UUID em `{obrigacaoId}/{uuid}`, e o nome enviado nunca é usado no disco.
 - O tipo é validado pela assinatura do conteúdo (*magic bytes*), comparada com a extensão, dentro de uma lista de tipos permitidos. O tamanho máximo é configurável (padrão de 10 MB).
-- Se a gravação no banco falhar depois de salvar o arquivo, o arquivo é removido, sem deixar órfãos.
+- A validação e a gravação do arquivo acontecem fora da transação, que é curta e só registra o anexo. Se o registro falhar, o arquivo é removido. Na exclusão, o arquivo só é removido depois do commit. A remoção é de melhor esforço: falhas são registradas em log e podem deixar arquivos sem registro, nunca o contrário.
 
 ## Alternativas consideradas
 

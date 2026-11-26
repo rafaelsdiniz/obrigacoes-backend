@@ -40,6 +40,9 @@ server:
 
 app:
   fuso-horario: ${APP_FUSO_HORARIO:America/Sao_Paulo}
+  anexos:
+    diretorio: ${APP_ANEXOS_DIRETORIO:storage/anexos}
+    tamanho-maximo: ${APP_ANEXOS_TAMANHO_MAXIMO:10MB}
   cors:
     allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:3000,http://localhost:8081}
 

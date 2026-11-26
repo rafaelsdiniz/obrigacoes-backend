@@ -1,5 +1,6 @@
 package br.com.obrigacoes.shared.exception;
 
+import jakarta.servlet.MultipartConfigElement;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Positive;
@@ -11,17 +12,22 @@ import org.springframework.http.MediaType;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.util.unit.DataSize;
 import org.springframework.validation.beanvalidation.LocalValidatorFactoryBean;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
+import org.springframework.web.multipart.MultipartFile;
 
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
@@ -38,7 +44,8 @@ class GlobalExceptionHandlerTest {
         validator.afterPropertiesSet();
 
         mockMvc = MockMvcBuilders.standaloneSetup(new ControllerDeTeste())
-                .setControllerAdvice(new GlobalExceptionHandler())
+                .setControllerAdvice(new GlobalExceptionHandler(
+                        new MultipartConfigElement("", DataSize.ofMegabytes(10).toBytes(), -1, 0)))
                 .setValidator(validator)
                 .build();
     }
@@ -141,6 +148,30 @@ class GlobalExceptionHandlerTest {
     }
 
     @Test
+    void deveInformarEmPortuguesQualParametroObrigatorioFaltou() throws Exception {
+        mockMvc.perform(get("/teste/parametro"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.codigo").value("REQUISICAO_INVALIDA"))
+                .andExpect(jsonPath("$.detail").value("O parâmetro obrigatório 'pagina' não foi informado."));
+    }
+
+    @Test
+    void deveInformarEmPortuguesQualParteDoMultipartFaltou() throws Exception {
+        mockMvc.perform(multipart("/teste/upload"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.codigo").value("REQUISICAO_INVALIDA"))
+                .andExpect(jsonPath("$.detail").value("O parâmetro obrigatório 'arquivo' não foi informado."));
+    }
+
+    @Test
+    void deveInformarOLimiteQuandoOUploadExcedeOTamanhoMaximo() throws Exception {
+        mockMvc.perform(get("/teste/upload-grande"))
+                .andExpect(status().isContentTooLarge())
+                .andExpect(jsonPath("$.codigo").value("ARQUIVO_INVALIDO"))
+                .andExpect(jsonPath("$.detail").value("O arquivo excede o tamanho máximo de 10 MB."));
+    }
+
+    @Test
     void deveOcultarDetalhesDeErroInesperado() throws Exception {
         mockMvc.perform(get("/teste/inesperado"))
                 .andExpect(status().isInternalServerError())
@@ -194,6 +225,15 @@ class GlobalExceptionHandlerTest {
 
         @GetMapping("/teste/id/{id}")
         void porId(@PathVariable Long id) {
+        }
+
+        @PostMapping("/teste/upload")
+        void upload(@RequestPart("arquivo") MultipartFile arquivo) {
+        }
+
+        @GetMapping("/teste/upload-grande")
+        void uploadGrande() {
+            throw new MaxUploadSizeExceededException(-1);
         }
 
         @GetMapping("/teste/inesperado")

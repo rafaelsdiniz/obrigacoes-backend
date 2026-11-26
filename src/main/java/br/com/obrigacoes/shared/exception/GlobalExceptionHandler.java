@@ -1,5 +1,6 @@
 package br.com.obrigacoes.shared.exception;
 
+import jakarta.servlet.MultipartConfigElement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.TypeMismatchException;
@@ -13,13 +14,16 @@ import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.util.unit.DataSize;
 import org.springframework.web.ErrorResponse;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.method.annotation.HandlerMethodValidationException;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
+import org.springframework.web.multipart.support.MissingServletRequestPartException;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
 import tools.jackson.databind.exc.MismatchedInputException;
@@ -39,9 +43,15 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     private static final String PROP_TIMESTAMP = "timestamp";
     private static final String PROP_ERROS = "erros";
 
+    private final DataSize tamanhoMaximoArquivo;
+
+    public GlobalExceptionHandler(MultipartConfigElement configuracaoMultipart) {
+        this.tamanhoMaximoArquivo = DataSize.ofBytes(configuracaoMultipart.getMaxFileSize());
+    }
+
     @ExceptionHandler(ApiException.class)
     public ResponseEntity<ProblemDetail> handleApiException(ApiException ex) {
-        return responder(problema(ex.getStatus(), ex.getTitulo(), ex.getMessage(), ex.getCodigo()));
+        return responder(problemaDe(ex));
     }
 
     @ExceptionHandler({OptimisticLockingFailureException.class, PessimisticLockingFailureException.class})
@@ -132,13 +142,30 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     }
 
     @Override
+    protected ResponseEntity<Object> handleMissingServletRequestParameter(MissingServletRequestParameterException ex,
+                                                                          HttpHeaders headers,
+                                                                          HttpStatusCode status,
+                                                                          WebRequest request) {
+        return handleExceptionInternal(ex, parametroObrigatorioAusente(ex.getParameterName()), headers,
+                HttpStatus.BAD_REQUEST, request);
+    }
+
+    @Override
+    protected ResponseEntity<Object> handleMissingServletRequestPart(MissingServletRequestPartException ex,
+                                                                     HttpHeaders headers,
+                                                                     HttpStatusCode status,
+                                                                     WebRequest request) {
+        return handleExceptionInternal(ex, parametroObrigatorioAusente(ex.getRequestPartName()), headers,
+                HttpStatus.BAD_REQUEST, request);
+    }
+
+    @Override
     protected ResponseEntity<Object> handleMaxUploadSizeExceededException(MaxUploadSizeExceededException ex,
                                                                           HttpHeaders headers,
                                                                           HttpStatusCode status,
                                                                           WebRequest request) {
-        ProblemDetail problema = problema(HttpStatus.CONTENT_TOO_LARGE, "Arquivo muito grande",
-                "O arquivo excede o tamanho máximo permitido.", CodigoErro.ARQUIVO_INVALIDO);
-        return handleExceptionInternal(ex, problema, headers, HttpStatus.CONTENT_TOO_LARGE, request);
+        return handleExceptionInternal(ex, problemaDe(new ArquivoMuitoGrandeException(tamanhoMaximoArquivo)), headers,
+                HttpStatus.CONTENT_TOO_LARGE, request);
     }
 
     @Override
@@ -160,6 +187,15 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         problema.setProperty(PROP_CODIGO, codigo);
         problema.setProperty(PROP_TIMESTAMP, Instant.now());
         return problema;
+    }
+
+    private static ProblemDetail problemaDe(ApiException ex) {
+        return problema(ex.getStatus(), ex.getTitulo(), ex.getMessage(), ex.getCodigo());
+    }
+
+    private static ProblemDetail parametroObrigatorioAusente(String nome) {
+        return problema(HttpStatus.BAD_REQUEST, "Requisição inválida",
+                "O parâmetro obrigatório '%s' não foi informado.".formatted(nome), CodigoErro.REQUISICAO_INVALIDA);
     }
 
     private static ProblemDetail problemaDeValidacao(List<ErroCampo> erros) {

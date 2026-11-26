@@ -64,7 +64,7 @@ Formato RFC 7807, com `Content-Type: application/problem+json`:
 | HTTP | `codigo` | Quando |
 |---|---|---|
 | 400 | `VALIDACAO` | Campos inválidos (inclui `erros`) |
-| 400 | `REQUISICAO_INVALIDA` | Corpo malformado, parâmetro de tipo incorreto, ordenação não permitida |
+| 400 | `REQUISICAO_INVALIDA` | Corpo malformado, parâmetro ausente ou de tipo incorreto, ordenação não permitida |
 | 400 | `ARQUIVO_INVALIDO` | Arquivo vazio ou de tipo não permitido |
 | 404 | `RECURSO_NAO_ENCONTRADO` | Registro inexistente |
 | 409 | `CONFLITO` | Duplicidade ou versão desatualizada |
@@ -248,7 +248,7 @@ O status informado precisa ser exatamente o `proximoStatus` da obrigação.
 
 | Método | Rota | Descrição | Sucesso |
 |---|---|---|---|
-| `POST` | `/` | Envia um arquivo (`multipart/form-data`, campo `arquivo`) | 201 |
+| `POST` | `/` | Envia um arquivo por requisição (`multipart/form-data`, campo `arquivo`) | 201 |
 | `GET` | `/` | Lista os anexos da obrigação, do mais recente ao mais antigo | 200 |
 | `GET` | `/{anexoId}` | Baixa o arquivo | 200 |
 | `DELETE` | `/{anexoId}` | Exclui o anexo (obrigação não concluída) | 204 |
@@ -259,6 +259,7 @@ O status informado precisa ser exatamente o `proximoStatus` da obrigação.
 {
   "id": 7,
   "nomeOriginal": "recibo-dctfweb-10-2026.pdf",
+  "tipo": "PDF",
   "tipoConteudo": "application/pdf",
   "tamanho": 184233,
   "hashSha256": "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08",
@@ -266,13 +267,24 @@ O status informado precisa ser exatamente o `proximoStatus` da obrigação.
 }
 ```
 
-**Download**: corpo binário com `Content-Type` original, `Content-Length` e `Content-Disposition: attachment; filename*=UTF-8''recibo-dctfweb-10-2026.pdf`.
+**Download**: corpo binário com os cabeçalhos:
+
+```http
+Content-Type: application/pdf
+Content-Length: 184233
+Content-Disposition: attachment; filename="relatorio outubro.pdf"; filename*=UTF-8''relat%C3%B3rio%20outubro.pdf
+X-Content-Type-Options: nosniff
+Content-Security-Policy: sandbox
+```
+
+O parâmetro `filename` traz uma versão ASCII do nome para clientes antigos, e `filename*` traz o nome original em UTF-8.
 
 **Erros específicos**
 
 | HTTP | Situação |
 |---|---|
-| 400 | Arquivo vazio, ausente ou de tipo não permitido |
+| 400 | `ARQUIVO_INVALIDO`: arquivo vazio, de tipo não permitido ou com conteúdo que não corresponde à extensão |
+| 400 | `REQUISICAO_INVALIDA`: campo `arquivo` ausente |
 | 404 | Obrigação inexistente ou anexo que não pertence à obrigação |
 | 413 | Arquivo acima do tamanho máximo |
 | 422 | Exclusão de anexo de obrigação concluída |

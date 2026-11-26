@@ -119,7 +119,7 @@ Prioridade segundo MoSCoW: **M** (obrigatório), **S** (importante), **C** (dese
 
 | ID | Requisito | Prioridade |
 |---|---|---|
-| RF-20 | Enviar um ou mais arquivos para uma obrigação. | M |
+| RF-20 | Enviar arquivos para uma obrigação, um por requisição, sem limite de quantidade por obrigação. | M |
 | RF-21 | Listar os anexos de uma obrigação com nome, tipo, tamanho e data de envio. | M |
 | RF-22 | Baixar um anexo com o nome e o tipo originais. | M |
 | RF-23 | Excluir um anexo de obrigação não concluída. | S |
@@ -219,8 +219,8 @@ stateDiagram-v2
 |---|---|
 | RN-29 | Uma obrigação pode ter vários anexos, inclusive depois de concluída (ex.: recibo de entrega). |
 | RN-30 | O arquivo não pode estar vazio e deve ter no máximo **10 MB** (valor configurável). |
-| RN-31 | São aceitos os tipos **PDF, PNG, JPEG, XML, CSV, XLSX e DOCX**. O tipo é confirmado pela assinatura do conteúdo do arquivo, e não apenas pela extensão. |
-| RN-32 | O nome original do arquivo é preservado para exibição e download. O arquivo é armazenado com um identificador gerado pelo sistema, nunca com o nome enviado. |
+| RN-31 | São aceitos os tipos **PDF, PNG, JPEG, XML, CSV, XLSX e DOCX**. O tipo é confirmado pela assinatura do conteúdo do arquivo, e não apenas pela extensão. CSV e XML são reconhecidos como texto em UTF-8 ou ISO-8859-1; arquivos de texto em UTF-16 não são aceitos. |
+| RN-32 | O nome original do arquivo é preservado para exibição e download, sem caminho de pastas, sem caracteres de controle ou invisíveis e com até 255 caracteres. O arquivo é armazenado com um identificador gerado pelo sistema, nunca com o nome enviado. |
 | RN-33 | É calculado e registrado o hash SHA-256 de cada arquivo, para conferência de integridade. |
 | RN-34 | Um anexo só pode ser excluído enquanto a obrigação **não estiver concluída**. Depois da conclusão, os documentos ficam preservados como registro do cumprimento. |
 | RN-35 | O anexo só é acessível pela obrigação a que pertence: anexo de outra obrigação é tratado como inexistente. |

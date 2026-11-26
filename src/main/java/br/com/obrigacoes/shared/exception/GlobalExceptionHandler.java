@@ -1,5 +1,6 @@
 package br.com.obrigacoes.shared.exception;
 
+import br.com.obrigacoes.shared.persistence.Restricoes;
 import jakarta.servlet.MultipartConfigElement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -65,9 +66,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ResponseEntity<ProblemDetail> handleDataIntegrity(DataIntegrityViolationException ex) {
-        String restricao = ex.getCause() instanceof org.hibernate.exception.ConstraintViolationException violacao
-                ? violacao.getConstraintName() : "desconhecida";
-        log.warn("Violação de integridade dos dados (restrição: {})", restricao);
+        log.warn("Violação de integridade dos dados (restrição: {})", Restricoes.nome(ex).orElse("desconhecida"));
         return responder(problema(HttpStatus.CONFLICT, "Conflito de dados",
                 "A operação viola uma restrição de integridade dos dados.", CodigoErro.CONFLITO));
     }
@@ -226,8 +225,17 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
                     "O tipo de conteúdo da requisição não é suportado.");
             default -> problema.setTitle(status.is5xxServerError() ? "Erro interno" : "Requisição inválida");
         }
-        problema.setProperty(PROP_CODIGO, status.is5xxServerError() ? CodigoErro.ERRO_INTERNO : CodigoErro.REQUISICAO_INVALIDA);
+        problema.setProperty(PROP_CODIGO, codigoPara(status));
         problema.setProperty(PROP_TIMESTAMP, Instant.now());
+    }
+
+    private static CodigoErro codigoPara(HttpStatusCode status) {
+        if (status.is5xxServerError()) {
+            return CodigoErro.ERRO_INTERNO;
+        }
+        return status.value() == HttpStatus.NOT_FOUND.value()
+                ? CodigoErro.RECURSO_NAO_ENCONTRADO
+                : CodigoErro.REQUISICAO_INVALIDA;
     }
 
     private static void definir(ProblemDetail problema, String titulo, String detalhe) {

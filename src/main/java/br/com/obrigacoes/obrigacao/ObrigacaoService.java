@@ -4,12 +4,14 @@ import br.com.obrigacoes.empresa.Empresa;
 import br.com.obrigacoes.empresa.EmpresaService;
 import br.com.obrigacoes.obrigacao.dto.ObrigacaoFiltro;
 import br.com.obrigacoes.obrigacao.dto.ObrigacaoRequest;
+import br.com.obrigacoes.obrigacao.dto.ResumoObrigacoesFiltro;
 import br.com.obrigacoes.shared.exception.RecursoNaoEncontradoException;
 import br.com.obrigacoes.usuario.Usuario;
 import br.com.obrigacoes.usuario.UsuarioService;
 import org.hibernate.Hibernate;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -91,5 +93,15 @@ public class ObrigacaoService {
 
     public Page<Obrigacao> listar(ObrigacaoFiltro filtro, LocalDate hoje, Pageable paginacao) {
         return repository.findAll(ObrigacaoSpecifications.com(filtro, hoje), paginacao);
+    }
+
+    public ResumoObrigacoes resumir(ResumoObrigacoesFiltro filtro, LocalDate hoje) {
+        Specification<Obrigacao> escopo = ObrigacaoSpecifications.doEscopo(filtro.empresaId(), filtro.responsavelId());
+        return new ResumoObrigacoes(
+                repository.count(escopo.and(ObrigacaoSpecifications.comStatus(StatusObrigacao.PENDENTE))),
+                repository.count(escopo.and(ObrigacaoSpecifications.comStatus(StatusObrigacao.EM_ANDAMENTO))),
+                repository.count(escopo.and(ObrigacaoSpecifications.comStatus(StatusObrigacao.CONCLUIDA))),
+                repository.count(escopo.and(ObrigacaoSpecifications.atrasadas(hoje)))
+        );
     }
 }

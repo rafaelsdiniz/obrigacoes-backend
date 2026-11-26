@@ -6,6 +6,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.ResultActions;
+import org.springframework.test.web.servlet.ResultMatcher;
 
 import java.time.LocalDate;
 import java.time.ZoneId;
@@ -313,6 +314,25 @@ class ObrigacaoControllerIntegracaoTest extends IntegracaoTest {
     }
 
     @Test
+    void deveResumirObrigacoesPorStatusEAtrasadas() throws Exception {
+        long outraEmpresa = criarEmpresa("Beta Serviços", "11444777000161");
+        long outroResponsavel = criarUsuario("Bruno Lima", "bruno@escritorio.com.br");
+        criar("FGTS Digital", HOJE.minusDays(2), empresaId, responsavelId).andExpect(status().isCreated());
+        criar("DCTFWeb", HOJE.plusDays(5), empresaId, responsavelId).andExpect(status().isCreated());
+        long emAndamentoVencida = idDe(criar("EFD-Reinf", HOJE.minusDays(1), empresaId, outroResponsavel));
+        alterarStatus(emAndamentoVencida, "EM_ANDAMENTO").andExpect(status().isOk());
+        long concluidaVencida = idDe(criar("DEFIS", HOJE.minusDays(10), outraEmpresa, responsavelId));
+        alterarStatus(concluidaVencida, "EM_ANDAMENTO").andExpect(status().isOk());
+        alterarStatus(concluidaVencida, "CONCLUIDA").andExpect(status().isOk());
+
+        resumir(null, null).andExpect(resumoIgual(2, 1, 1, 2));
+        resumir(empresaId, null).andExpect(resumoIgual(2, 1, 0, 2));
+        resumir(null, responsavelId).andExpect(resumoIgual(2, 0, 1, 1));
+        resumir(empresaId, responsavelId).andExpect(resumoIgual(2, 0, 0, 1));
+        resumir(outraEmpresa, outroResponsavel).andExpect(resumoIgual(0, 0, 0, 0));
+    }
+
+    @Test
     void deveRetornar404ParaObrigacaoInexistente() throws Exception {
         mockMvc.perform(get(URL + "/999")).andExpect(status().isNotFound());
         mockMvc.perform(get(URL + "/999/historico")).andExpect(status().isNotFound());
@@ -327,6 +347,26 @@ class ObrigacaoControllerIntegracaoTest extends IntegracaoTest {
     private ResultActions alterarStatus(long id, String novoStatus) throws Exception {
         return mockMvc.perform(patch(URL + "/" + id + "/status").contentType(MediaType.APPLICATION_JSON)
                 .content("{\"status\": \"%s\"}".formatted(novoStatus)));
+    }
+
+    private ResultActions resumir(Long empresa, Long responsavel) throws Exception {
+        var requisicao = get(URL + "/resumo");
+        if (empresa != null) {
+            requisicao.param("empresaId", empresa.toString());
+        }
+        if (responsavel != null) {
+            requisicao.param("responsavelId", responsavel.toString());
+        }
+        return mockMvc.perform(requisicao).andExpect(status().isOk());
+    }
+
+    private static ResultMatcher resumoIgual(long pendentes, long emAndamento, long concluidas, long atrasadas) {
+        return resultado -> {
+            jsonPath("$.pendentes").value(pendentes).match(resultado);
+            jsonPath("$.emAndamento").value(emAndamento).match(resultado);
+            jsonPath("$.concluidas").value(concluidas).match(resultado);
+            jsonPath("$.atrasadas").value(atrasadas).match(resultado);
+        };
     }
 
     private long criarEmpresa(String razaoSocial, String cnpj) throws Exception {

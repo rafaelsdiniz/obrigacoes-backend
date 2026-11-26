@@ -67,7 +67,7 @@ Formato RFC 7807, com `Content-Type: application/problem+json`:
 | 400 | `REQUISICAO_INVALIDA` | Corpo malformado, parâmetro ausente ou de tipo incorreto, ordenação não permitida |
 | 400 | `ARQUIVO_INVALIDO` | Arquivo vazio ou de tipo não permitido |
 | 404 | `RECURSO_NAO_ENCONTRADO` | Registro inexistente |
-| 409 | `CONFLITO` | Duplicidade ou versão desatualizada |
+| 409 | `CONFLITO` | Duplicidade (com `erros` indicando o campo) ou versão desatualizada (sem `erros`) |
 | 413 | `ARQUIVO_INVALIDO` | Arquivo acima do tamanho máximo |
 | 422 | `REGRA_NEGOCIO` | Regra de negócio violada |
 | 500 | `ERRO_INTERNO` | Erro inesperado |
@@ -121,7 +121,7 @@ Ordenação: `razaoSocial` (padrão), `nomeFantasia`, `cnpj`, `situacao`, `criad
 }
 ```
 
-Erros específicos: `409` para CNPJ já cadastrado.
+Erros específicos: `409` para CNPJ já cadastrado, com `erros: [{"campo": "cnpj", ...}]`.
 
 ---
 
@@ -138,7 +138,7 @@ Mesmas rotas e comportamento de empresas. Filtros: `busca` (nome ou e-mail) e `s
 }
 ```
 
-Erros específicos: `409` para e-mail já cadastrado.
+Erros específicos: `409` para e-mail já cadastrado, com `erros: [{"campo": "email", ...}]`.
 
 ---
 

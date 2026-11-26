@@ -15,7 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional(readOnly = true)
 public class EmpresaService {
 
-    private static final String RECURSO = "Empresa";
+    private static final String RECURSO = "empresa";
 
     private final EmpresaRepository repository;
 
@@ -80,6 +80,6 @@ public class EmpresaService {
     }
 
     private static ConflitoException cnpjDuplicado() {
-        return new ConflitoException("Já existe uma empresa cadastrada com este CNPJ.");
+        return new ConflitoException("cnpj", "Já existe uma empresa cadastrada com este CNPJ.");
     }
 }

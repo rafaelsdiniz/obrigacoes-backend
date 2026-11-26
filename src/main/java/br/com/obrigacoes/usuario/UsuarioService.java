@@ -15,7 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional(readOnly = true)
 public class UsuarioService {
 
-    private static final String RECURSO = "Usuário";
+    private static final String RECURSO = "usuário";
 
     private final UsuarioRepository repository;
 
@@ -77,6 +77,6 @@ public class UsuarioService {
     }
 
     private static ConflitoException emailDuplicado() {
-        return new ConflitoException("Já existe um usuário cadastrado com este e-mail.");
+        return new ConflitoException("email", "Já existe um usuário cadastrado com este e-mail.");
     }
 }

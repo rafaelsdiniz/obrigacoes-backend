@@ -5,7 +5,7 @@ import org.springframework.http.HttpStatus;
 public class RecursoNaoEncontradoException extends ApiException {
 
     public RecursoNaoEncontradoException(String recurso, Object id) {
-        super("%s com id %s não foi encontrado(a).".formatted(recurso, id));
+        super("Não existe %s com o id %s.".formatted(recurso, id));
     }
 
     @Override

@@ -190,7 +190,11 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     }
 
     private static ProblemDetail problemaDe(ApiException ex) {
-        return problema(ex.getStatus(), ex.getTitulo(), ex.getMessage(), ex.getCodigo());
+        ProblemDetail problema = problema(ex.getStatus(), ex.getTitulo(), ex.getMessage(), ex.getCodigo());
+        if (!ex.getErros().isEmpty()) {
+            problema.setProperty(PROP_ERROS, ex.getErros());
+        }
+        return problema;
     }
 
     private static ProblemDetail parametroObrigatorioAusente(String nome) {

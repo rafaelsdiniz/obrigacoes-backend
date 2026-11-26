@@ -422,29 +422,30 @@ Organização por funcionalidade, com camadas internas ([ADR-0008](adr/0008-arqu
 
 ```text
 lib/
-├── main.dart
-├── app/                 MaterialApp, tema, rotas (go_router), layout responsivo
+├── main.dart              carrega a configuração e inicia o app
+├── app/                   MaterialApp, tema, roteador (go_router) e navegação responsiva
 ├── core/
-│   ├── config/          leitura da URL da API (dart-define ou config.json em runtime)
-│   ├── http/            cliente Dio, conversão de ProblemDetail em ApiException
-│   ├── paginacao/       modelo de página e controle de lista paginada
-│   └── widgets/         estados de carregando/vazio/erro, chips, diálogos, campos
+│   ├── config/            URL da API: config.json na raiz do site ou --dart-define
+│   ├── dominio/           Json, situação, filtro e termos dos cadastros
+│   ├── estado/            notifiers reaproveitáveis (filtro de listagem)
+│   ├── formatacao/        CNPJ (máscara e validação) e validações de formulário
+│   ├── http/              ClienteApi (Dio), ErroApi, página e parâmetros de listagem
+│   └── widgets/           estados de tela, lista paginada, filtros, formulário e avisos
 └── features/
-    ├── painel/
     ├── empresas/
-    │   ├── data/        EmpresaApi (HTTP) e EmpresaRepository
-    │   ├── domain/      modelos imutáveis
-    │   └── presentation/ telas, widgets e providers (Riverpod)
-    ├── usuarios/
-    ├── obrigacoes/
-    └── anexos/
+    │   ├── data/          EmpresaRepository (HTTP ⇄ modelo)
+    │   ├── domain/        modelos imutáveis
+    │   └── presentation/  telas, providers, operações de cadastro e rotas da funcionalidade
+    └── usuarios/
 ```
 
 | Camada | Responsabilidade |
 |---|---|
-| `presentation` | Widgets e estado da tela (providers e notifiers do Riverpod). Não conhece HTTP. |
-| `domain` | Modelos imutáveis e enums espelhando o contrato da API, com regras de exibição (ex.: próxima ação de status). |
-| `data` | Chamadas HTTP e conversão JSON ⇄ modelo. Erros da API viram `ApiException` tipada. |
+| `presentation` | Telas e estado (providers do Riverpod). As operações que alteram dados ficam em uma classe da camada de estado (`CadastroDeEmpresas`), que chama o repositório e invalida a listagem. As telas nunca falam com HTTP. Cada funcionalidade declara as próprias rotas, e o `app` só as compõe. |
+| `domain` | Modelos imutáveis, com `deJson`/`paraJson`, espelhando o contrato da API. |
+| `data` | Repositórios que chamam a API pelo `ClienteApi` e convertem JSON em modelo. |
+
+O `ClienteApi` envolve o Dio e converte toda falha em `ErroApi`, com o `codigo` estável e os erros por campo do Problem Details. Os formulários usam esses erros no validador do próprio campo. O "Recarregar" aparece só no conflito de versão, que é um 409 sem erro de campo.
 
 ### 6.2 Decisões do frontend
 
@@ -452,8 +453,8 @@ lib/
 |---|---|---|
 | Estado e injeção de dependência | Riverpod | Estado assíncrono declarativo (`AsyncValue`), fácil de substituir em testes, sem depender da árvore de widgets. |
 | Rotas | go_router | Rotas declarativas com URL real na web (deep link, botão voltar). |
-| HTTP | Dio | Interceptores, upload multipart com progresso, cancelamento. |
-| Configuração | `config.json` lido em runtime | A mesma imagem Docker serve qualquer ambiente, pois a URL da API vem de variável de ambiente do contêiner. |
+| HTTP | Dio, encapsulado no `ClienteApi` | Tradução de erros em um único ponto, upload multipart com progresso e testes com adaptador falso. |
+| Configuração | `/config.json` lido em runtime | A mesma imagem Docker serve qualquer ambiente, pois a URL da API vem de variável de ambiente do contêiner. Fora da web vale o `--dart-define`, com `10.0.2.2` como padrão no emulador Android. |
 | Layout | `NavigationRail` (telas largas) e `NavigationBar` (celular) | Uma única base de código para web e Android. |
 
 ---

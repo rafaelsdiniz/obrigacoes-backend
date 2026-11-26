@@ -57,7 +57,7 @@ class GlobalExceptionHandlerTest {
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON))
                 .andExpect(jsonPath("$.status").value(404))
                 .andExpect(jsonPath("$.title").value("Recurso não encontrado"))
-                .andExpect(jsonPath("$.detail").value("Empresa com id 99 não foi encontrado(a)."))
+                .andExpect(jsonPath("$.detail").value("Não existe empresa com o id 99."))
                 .andExpect(jsonPath("$.codigo").value("RECURSO_NAO_ENCONTRADO"))
                 .andExpect(jsonPath("$.timestamp", notNullValue()));
     }
@@ -187,7 +187,7 @@ class GlobalExceptionHandlerTest {
 
         @GetMapping("/teste/nao-encontrado")
         void naoEncontrado() {
-            throw new RecursoNaoEncontradoException("Empresa", 99);
+            throw new RecursoNaoEncontradoException("empresa", 99);
         }
 
         @GetMapping("/teste/regra")

@@ -42,7 +42,9 @@ class UsuarioControllerIntegracaoTest extends IntegracaoTest {
 
         mockMvc.perform(post(URL).contentType(MediaType.APPLICATION_JSON).content(json("Outra Ana", "ANA@ESCRITORIO.COM.BR")))
                 .andExpect(status().isConflict())
-                .andExpect(jsonPath("$.codigo").value("CONFLITO"));
+                .andExpect(jsonPath("$.codigo").value("CONFLITO"))
+                .andExpect(jsonPath("$.erros[0].campo").value("email"))
+                .andExpect(jsonPath("$.erros[0].mensagem").value("Já existe um usuário cadastrado com este e-mail."));
     }
 
     @Test
@@ -73,7 +75,8 @@ class UsuarioControllerIntegracaoTest extends IntegracaoTest {
         mockMvc.perform(put(URL + "/" + id).contentType(MediaType.APPLICATION_JSON).content("""
                         {"nome": "Ana", "email": "ana@escritorio.com.br", "versao": 7}
                         """))
-                .andExpect(status().isConflict());
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.erros").doesNotExist());
     }
 
     @Test

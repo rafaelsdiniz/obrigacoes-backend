@@ -70,7 +70,10 @@ Cada regra de negócio tem pelo menos um teste que falha se ela for quebrada.
 |---|---|---|
 | Unidade | Conversão JSON ⇄ modelo, tradução de ProblemDetail em exceção, regras de exibição (próxima ação de status, atraso) | `flutter_test`, `mocktail` |
 | Estado | Providers e notifiers: carregamento, sucesso, erro e paginação | `flutter_test`, `ProviderContainer` com dependências substituídas |
-| Widget | Formulários (validação e envio), listas (vazia, erro, paginada), detalhe da obrigação (ações conforme o status) | `flutter_test`, `mocktail` |
+| Widget | Formulários (validação e envio), listas (vazia, erro, paginada), detalhe da obrigação (ações conforme o status), anexos (envio, download e exclusão) | `flutter_test`, `mocktail` |
+| Layout e acessibilidade | Todas as rotas em 4 tamanhos de tela com texto em dobro, sem estouro de layout; contraste WCAG AA, alvos de toque de 48 px e rótulos para leitor de tela | `flutter_test` (`textContrastGuideline`, `androidTapTargetGuideline`, `labeledTapTargetGuideline`) |
+
+Os testes de tela sobem o aplicativo inteiro com os repositórios substituídos por falsos (`mocktail`) e navegam pelas rotas reais. Escolha de arquivo e download ficam atrás de `ArquivosDoDispositivo`, também substituído nos testes.
 
 ## 6. Critérios de qualidade no CI
 
@@ -79,7 +82,7 @@ Cada regra de negócio tem pelo menos um teste que falha se ela for quebrada.
 | Todos os testes passando | `./mvnw verify` | `flutter test` |
 | Análise estática sem avisos | compilação com `-Xlint` | `flutter analyze` |
 | Formatação | `.editorconfig` | `dart format --set-exit-if-changed` |
-| Cobertura de linhas medida e publicada | JaCoCo, mínimo de 90% (build falha abaixo disso) | `lcov`, publicada como artefato |
+| Cobertura de linhas medida e publicada | JaCoCo, mínimo de 90% (build falha abaixo disso) | `lcov`, mínimo de 80% (CI falha abaixo disso) |
 | Regras de arquitetura | ArchUnit | — |
 
 ## 7. Execução

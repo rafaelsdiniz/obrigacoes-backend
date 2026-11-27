@@ -231,7 +231,7 @@ stateDiagram-v2
 |---|---|
 | RN-36 | Textos recebidos têm os espaços das pontas removidos. Texto opcional em branco é gravado como vazio (nulo). |
 | RN-37 | A edição exige a **versão** do registro lida pelo cliente. Se outro usuário alterou o registro nesse meio-tempo, a edição é recusada com conflito, para evitar sobrescrita silenciosa (concorrência otimista). |
-| RN-38 | Toda entidade registra data e hora de criação e da última atualização, em UTC. |
+| RN-38 | Empresa, usuário, obrigação e anexo registram data e hora de criação e da última atualização, e cada transição do histórico registra quando ocorreu, sempre em UTC. |
 | RN-39 | A ordenação das listagens só aceita campos expostos pela API e usa o identificador como desempate, para que nenhum registro se repita ou suma entre páginas. O tamanho máximo de página é 100. |
 
 ---

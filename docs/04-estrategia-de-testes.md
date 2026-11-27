@@ -19,15 +19,15 @@ Garantir que as regras de negócio de [01-requisitos.md](01-requisitos.md) estej
 ```mermaid
 flowchart TB
     e2e["Integração da API<br>MockMvc + MySQL real (Testcontainers)<br>fluxos completos, contrato HTTP, migrations"]
-    servico["Serviços<br>JUnit 5 + Mockito<br>orquestração e verificações dependentes do banco"]
-    dominio["Domínio e utilitários<br>JUnit 5 puro<br>regras, transições, validações"]
+    servico["Serviços<br>JUnit 6 + Mockito<br>orquestração e verificações dependentes do banco"]
+    dominio["Domínio e utilitários<br>JUnit 6 puro<br>regras, transições, validações"]
     e2e --- servico --- dominio
 ```
 
 | Nível | O que cobre | Ferramentas | Velocidade |
 |---|---|---|---|
-| **Domínio** | Invariantes das entidades, máquina de estados, cálculo de atraso, CNPJ, normalização de textos, paginação | JUnit 5, AssertJ, testes parametrizados | Milissegundos |
-| **Serviço** | Regras que dependem de consulta (duplicidade, situação ativa, versão), tratamento de falhas no armazenamento | JUnit 5, Mockito | Milissegundos |
+| **Domínio** | Invariantes das entidades, máquina de estados, cálculo de atraso, CNPJ, normalização de textos, paginação | JUnit 6, AssertJ, testes parametrizados | Milissegundos |
+| **Serviço** | Regras que dependem de consulta (duplicidade, situação ativa, versão), tratamento de falhas no armazenamento | JUnit 6, Mockito | Milissegundos |
 | **Integração** | Requisição HTTP até o banco: validação, serialização, status HTTP, formato de erro, filtros, paginação, restrições do banco, migrations | Spring Boot Test, MockMvc, Testcontainers (MySQL 8.4) | Segundos |
 | **Arquitetura** | Dependências entre camadas e módulos | ArchUnit | Milissegundos |
 
@@ -42,7 +42,8 @@ Cada regra de negócio tem pelo menos um teste que falha se ela for quebrada.
 | RN-01, RN-07, RN-19 | Domínio | Criação define `ATIVO` e `PENDENTE` |
 | RN-03, RN-04 | Domínio e integração | CNPJs numéricos e alfanuméricos válidos e inválidos, com e sem máscara; duplicidade gera `409` |
 | RN-09 | Serviço e integração | E-mail com caixa diferente é considerado duplicado |
-| RN-12 a RN-15 | Serviço e integração | Atribuir inativo gera `422`; manter vínculo inativo na edição é aceito; mudar status com vínculo inativo é aceito |
+| RN-06, RN-11 | Integração | Ativar ou inativar duas vezes responde `200` sem mudar a versão |
+| RN-12 a RN-15 | Serviço e integração | Atribuir inativo gera `422`; manter empresa e responsável inativos na edição é aceito; mudar status com vínculo inativo é aceito |
 | RN-18 | Validação e integração | Vencimento ou competência fora de 2000–2100 gera `400` |
 | RN-20 | Domínio e integração | Edição de concluída gera `422` |
 | RN-23 a RN-26 | Domínio (parametrizado) | Todas as combinações da matriz de transições |
@@ -60,7 +61,7 @@ Cada regra de negócio tem pelo menos um teste que falha se ela for quebrada.
 - Estrutura **Arrange / Act / Assert** com blocos separados por linha em branco.
 - **Um comportamento por teste.** Variações de entrada usam `@ParameterizedTest`.
 - Testes **independentes**: cada teste de integração cria os próprios dados e não depende da ordem de execução.
-- **Tempo controlado**: código que depende da data atual recebe um `Clock`, fixado nos testes.
+- **Tempo controlado**: código que depende da data atual recebe um `Clock`, fixado nos testes de domínio e de serviço. Os testes de integração usam datas relativas ao dia corrente.
 - Contêiner do MySQL **reutilizado** entre as classes de teste que compartilham o mesmo contexto do Spring (cache de contexto com `@ServiceConnection`), para manter a suíte rápida. O teste do limite de upload usa um contexto próprio e, por isso, um segundo contêiner.
 - Sem `Thread.sleep` nem dependência de rede externa.
 

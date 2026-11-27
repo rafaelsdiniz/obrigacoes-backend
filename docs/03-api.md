@@ -30,7 +30,7 @@ O Swagger é gerado a partir do código e é a fonte de verdade dos detalhes de 
 
 ### 1.1 Paginação
 
-Listagens aceitam `page` (começa em 0), `size` (padrão 20, máximo 100) e `sort` (`campo,asc|desc`, pode repetir). Ordenar por um campo não permitido retorna `400`.
+Listagens aceitam `page` (começa em 0), `size` (padrão 20, máximo 100) e `sort` (`campo,asc|desc`, pode repetir). Ordenar por um campo não permitido retorna `400`. Em obrigações, a ordenação por `status` é alfabética pelo nome do valor (`CONCLUIDA`, `EM_ANDAMENTO`, `PENDENTE`).
 
 ```json
 {
@@ -61,11 +61,12 @@ Formato RFC 7807, com `Content-Type: application/problem+json`:
 
 | HTTP | `codigo` | Quando |
 |---|---|---|
-| 400 | `VALIDACAO` | Campos inválidos (inclui `erros`) |
-| 400 | `REQUISICAO_INVALIDA` | Corpo malformado, parâmetro ausente ou de tipo incorreto, ordenação não permitida |
+| 400 | `VALIDACAO` | Campos do corpo ou filtros da consulta inválidos (inclui `erros`) |
+| 400 | `REQUISICAO_INVALIDA` | Corpo malformado, parâmetro de rota de tipo incorreto, ordenação ou página não permitida |
 | 400 | `ARQUIVO_INVALIDO` | Arquivo vazio ou de tipo não permitido |
 | 404 | `RECURSO_NAO_ENCONTRADO` | Registro ou rota inexistente, ou arquivo de anexo indisponível no armazenamento |
 | 405 | `REQUISICAO_INVALIDA` | Método HTTP não suportado pela rota |
+| 406 | `REQUISICAO_INVALIDA` | Formato de resposta pedido no `Accept` não suportado |
 | 409 | `CONFLITO` | Duplicidade (com `erros` indicando o campo) ou versão desatualizada (sem `erros`) |
 | 413 | `ARQUIVO_INVALIDO` | Arquivo acima do tamanho máximo |
 | 415 | `REQUISICAO_INVALIDA` | Tipo de conteúdo não suportado (por exemplo, upload que não é `multipart/form-data`) |

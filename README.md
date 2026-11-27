@@ -68,7 +68,7 @@ O aplicativo Flutter que consome esta API está em [obrigacoes-frontend](https:/
 | Linguagem e framework | Java 21, Spring Boot 4 (Web MVC, Data JPA, Validation, Actuator) |
 | Banco de dados | MySQL 8.4, com o esquema versionado pelo Flyway |
 | Documentação da API | springdoc-openapi (Swagger UI) |
-| Testes | JUnit 5, Mockito, AssertJ, Testcontainers (MySQL real), ArchUnit e JaCoCo |
+| Testes | JUnit 6, Mockito, AssertJ, Testcontainers (MySQL real), ArchUnit e JaCoCo |
 | Entrega | Docker (multi-stage), Docker Compose e GitHub Actions publicando no GHCR |
 
 ## Execução rápida

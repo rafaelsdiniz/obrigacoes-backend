@@ -13,4 +13,6 @@
 | [05 · Guia de contribuição](05-guia-de-contribuicao.md) | Fluxo de trabalho, branches, commits, padrões de código e definição de pronto |
 | [ADRs](adr/README.md) | Registro das decisões arquiteturais |
 
+Versão em PDF: [documentação completa](pdf/00-documentacao-completa.pdf) ou cada documento em [pdf/](pdf).
+
 Acompanhamento do desenvolvimento: [quadro no Trello](https://trello.com/b/lO3pOAnQ/sistema-de-gerenciamento-de-obrigacoes-player).

@@ -93,6 +93,30 @@ class UsuarioControllerIntegracaoTest extends IntegracaoTest {
     }
 
     @Test
+    void deveAtivarEInativarDeFormaIdempotente() throws Exception {
+        long id = criar("Ana Souza", "ana@escritorio.com.br");
+        mockMvc.perform(patch(URL + "/" + id + "/inativar")).andExpect(status().isOk());
+
+        mockMvc.perform(patch(URL + "/" + id + "/inativar"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.situacao").value("INATIVO"))
+                .andExpect(jsonPath("$.versao").value(1));
+
+        mockMvc.perform(patch(URL + "/" + id + "/ativar")).andExpect(status().isOk());
+        mockMvc.perform(patch(URL + "/" + id + "/ativar"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.situacao").value("ATIVO"))
+                .andExpect(jsonPath("$.versao").value(2));
+    }
+
+    @Test
+    void deveRetornar404ParaUsuarioInexistente() throws Exception {
+        mockMvc.perform(get(URL + "/999"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.codigo").value("RECURSO_NAO_ENCONTRADO"));
+    }
+
+    @Test
     void deveListarComFiltros() throws Exception {
         criar("Ana Souza", "ana@escritorio.com.br");
         long inativo = criar("Bruno Lima", "bruno@escritorio.com.br");

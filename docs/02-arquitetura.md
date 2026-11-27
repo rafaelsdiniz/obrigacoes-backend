@@ -4,7 +4,7 @@
 
 | | |
 |---|---|
-| **Versão** | 1.1 |
+| **Versão** | 1.3 |
 | **Data** | 26/11/2026 |
 | **Autor** | rafaelsdiniz |
 | **Modelo** | arc42 (resumido), com diagramas C4 |
@@ -16,6 +16,7 @@
 | 1.0 | 25/11/2026 | Versão inicial. |
 | 1.1 | 26/11/2026 | Frontend: painel, obrigações e anexos; regras de tela que complementam as do backend. |
 | 1.2 | 26/11/2026 | Frontend: busca global, filtros da lista, tema claro e escuro e design system. Backend: readiness com banco e análise estática na compilação. |
+| 1.3 | 26/11/2026 | Revisão de consistência com o código: nomes de classes, relógio nos testes e arquivo órfão no armazenamento. |
 
 ---
 
@@ -95,7 +96,7 @@ br.com.obrigacoes
 ├── config            CORS, OpenAPI, relógio com fuso do escritório, auditoria JPA e limites de upload
 ├── empresa           Empresa, EmpresaRepository, EmpresaService, EmpresaController, dto/
 ├── usuario           Usuario, UsuarioRepository, UsuarioService, UsuarioController, dto/
-├── obrigacao         Obrigacao, StatusObrigacao, TipoObrigacao, HistoricoStatus, ..., dto/
+├── obrigacao         Obrigacao, StatusObrigacao, TipoObrigacao, HistoricoStatusObrigacao, ..., dto/
 ├── anexo             Anexo, AnexoService, AnexoController, ArmazenamentoArquivos, ..., dto/
 └── shared
     ├── domain        EntidadeBase, Situacao, Textos
@@ -317,7 +318,7 @@ classDiagram
 | Esquema | Versionado por Flyway (`V{n}__descricao.sql`), aplicado na inicialização. O Hibernate roda com `ddl-auto: validate` e falha se o esquema divergir das entidades. |
 | Identificadores | `BIGINT AUTO_INCREMENT`. |
 | Concorrência | Coluna `versao` com `@Version`: a edição compara a versão enviada pelo cliente. A mudança de status usa bloqueio de linha (`SELECT … FOR UPDATE`) para serializar pedidos simultâneos ([ADR-0006](adr/0006-concorrencia-otimista.md)). |
-| Datas | `DATETIME(6)` em UTC, preenchidas pelo Spring Data Auditing com o `Clock` da aplicação, o mesmo usado nas regras de negócio e fixado nos testes. |
+| Datas | `DATETIME(6)` em UTC, preenchidas pelo Spring Data Auditing com o `Clock` da aplicação, o mesmo usado nas regras de negócio e fixado nos testes de domínio e de serviço. |
 | Unicidade | Restrições `UNIQUE` em `empresa.cnpj` e `usuario.email`, com colação binária para comparar exatamente o valor normalizado. |
 | Valores permitidos | Restrições `CHECK` para situação, status e tipo. |
 | Integridade referencial | Chaves estrangeiras de obrigação para empresa e usuário, e de histórico e anexo para obrigação. |
@@ -407,7 +408,7 @@ O conteúdo dos arquivos fica **fora do banco**, e o banco guarda apenas os meta
 Consistência entre banco e disco:
 - **Envio**: se o registro no banco falhar depois de gravar o arquivo, o serviço remove o arquivo antes de propagar o erro.
 - **Exclusão**: o arquivo só é removido depois que a exclusão é confirmada no banco. Se a transação for desfeita, o arquivo continua lá.
-- A remoção é de **melhor esforço**. Uma falha de disco ou a queda do processo entre a gravação e o commit pode deixar um arquivo sem registro, o que é registrado em log e não afeta os dados. A situação inversa, um registro sem arquivo, não acontece nos fluxos normais.
+- A remoção é de **melhor esforço**. Uma falha de disco ou a queda do processo entre a gravação e o commit pode deixar um arquivo sem registro, que ocupa espaço mas não afeta os dados. A situação inversa, um registro sem arquivo, não acontece nos fluxos normais.
 
 Medidas de segurança:
 - o caminho é montado só com identificadores gerados pelo sistema, a pasta passa por lista de caracteres permitidos e o caminho final é conferido dentro do diretório raiz, o que elimina *path traversal*;
@@ -581,4 +582,4 @@ Pull requests só são integrados com o pipeline verde.
 |---|---|---|
 | Sem autenticação | Qualquer cliente com acesso à rede usa a API, e o histórico não registra quem executou a ação. | Prioridade nº 1 das melhorias futuras. |
 | Armazenamento local de anexos | Não escala horizontalmente com várias instâncias da API. | Interface pronta para S3/MinIO. |
-| Data de "hoje" no cálculo de atraso | Dependeria do fuso do servidor. | `Clock` injetável com fuso configurável (`APP_FUSO_HORARIO`), fixado nos testes. |
+| Data de "hoje" no cálculo de atraso | Dependeria do fuso do servidor. | `Clock` injetável com fuso configurável (`APP_FUSO_HORARIO`), fixado nos testes de domínio e de serviço. |

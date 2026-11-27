@@ -66,7 +66,7 @@ Exemplos: `feat: fluxo de status das obrigações com histórico`, `test: transi
 ### 4.1 Gerais
 
 - **Código autoexplicativo, sem comentários.** Se um trecho precisa de explicação, ele ganha um nome: extrair um método, uma constante ou uma classe com nome que diga a intenção. O "porquê" das decisões vai para os [ADRs](adr/) e para o README.
-- **Domínio em português** (`Obrigacao`, `concluir()`, `dataVencimento`). Termos técnicos consagrados ficam em inglês quando fazem parte do framework (`Controller`, `Repository`, `Service`, `Request`, `Response`).
+- **Domínio em português** (`Obrigacao`, `alterarStatus()`, `dataVencimento`). Termos técnicos consagrados ficam em inglês quando fazem parte do framework (`Controller`, `Repository`, `Service`, `Request`, `Response`).
 - Nada de código morto, código comentado, `TODO`, `System.out`/`print` ou dependência sem uso.
 - Métodos curtos, com um nível de abstração. Retorno antecipado em vez de `if` aninhado.
 - Imutabilidade por padrão: `record` para DTOs, `final` nos campos injetados, coleções imutáveis.

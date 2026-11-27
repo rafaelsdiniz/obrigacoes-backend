@@ -52,6 +52,8 @@
 | [Guia de contribuição](docs/05-guia-de-contribuicao.md) | Fluxo de trabalho, commits, padrões de código e definição de pronto |
 | [Decisões arquiteturais](docs/adr/README.md) | ADRs |
 
+Toda a documentação também está em PDF, em [docs/pdf](docs/pdf): um arquivo por documento e o [volume completo](docs/pdf/00-documentacao-completa.pdf).
+
 O aplicativo Flutter que consome esta API está em [obrigacoes-frontend](https://github.com/rafaelsdiniz/obrigacoes-frontend), e o andamento do desenvolvimento, no [quadro do Trello](https://trello.com/b/lO3pOAnQ/sistema-de-gerenciamento-de-obrigacoes-player).
 
 ## Funcionalidades
@@ -68,7 +70,7 @@ O aplicativo Flutter que consome esta API está em [obrigacoes-frontend](https:/
 | Linguagem e framework | Java 21, Spring Boot 4 (Web MVC, Data JPA, Validation, Actuator) |
 | Banco de dados | MySQL 8.4, com o esquema versionado pelo Flyway |
 | Documentação da API | springdoc-openapi (Swagger UI) |
-| Testes | JUnit 5, Mockito, AssertJ, Testcontainers (MySQL real), ArchUnit e JaCoCo |
+| Testes | JUnit 6, Mockito, AssertJ, Testcontainers (MySQL real), ArchUnit e JaCoCo |
 | Entrega | Docker (multi-stage), Docker Compose e GitHub Actions publicando no GHCR |
 
 ## Execução rápida
@@ -130,7 +132,7 @@ src/main/resources/
 ├── application.yml
 └── db/migration/   scripts do Flyway (V1 a V4)
 src/test/java/      testes unitários, de integração (Testcontainers) e de arquitetura (ArchUnit)
-docs/               requisitos, arquitetura, API, testes, contribuição e ADRs
+docs/               requisitos, arquitetura, API, testes, contribuição e ADRs, também em PDF
 ```
 
 ## Decisões arquiteturais

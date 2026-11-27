@@ -101,7 +101,7 @@ public class Obrigacao extends EntidadeBase {
         return !status.isFinal() && dataVencimento.isBefore(hoje);
     }
 
-    private void garantirQueNaoEstaConcluida() {
+    public void garantirQueNaoEstaConcluida() {
         if (status != null && status.isFinal()) {
             throw new RegraNegocioException("A obrigação já foi concluída e não pode mais ser alterada.");
         }

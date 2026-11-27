@@ -59,6 +59,7 @@ public class ObrigacaoService {
     public Obrigacao atualizar(Long id, ObrigacaoRequest requisicao) {
         Obrigacao obrigacao = buscarPorId(id);
         obrigacao.verificarVersao(requisicao.versao());
+        obrigacao.garantirQueNaoEstaConcluida();
         Empresa empresa = Objects.equals(obrigacao.getEmpresa().getId(), requisicao.empresaId())
                 ? obrigacao.getEmpresa()
                 : empresaService.buscarAtivaPorId(requisicao.empresaId());

@@ -140,6 +140,23 @@ class EmpresaControllerIntegracaoTest extends IntegracaoTest {
     }
 
     @Test
+    void deveAtivarEInativarDeFormaIdempotente() throws Exception {
+        long id = criar("Contábil Alfa LTDA", "11222333000181");
+        inativar(id);
+
+        mockMvc.perform(patch(URL + "/" + id + "/inativar"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.situacao").value("INATIVO"))
+                .andExpect(jsonPath("$.versao").value(1));
+
+        mockMvc.perform(patch(URL + "/" + id + "/ativar")).andExpect(status().isOk());
+        mockMvc.perform(patch(URL + "/" + id + "/ativar"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.situacao").value("ATIVO"))
+                .andExpect(jsonPath("$.versao").value(2));
+    }
+
+    @Test
     void deveListarComFiltrosEPaginacao() throws Exception {
         criar("Contábil Alfa LTDA", "11222333000181");
         criar("Beta Serviços", "11444777000161");

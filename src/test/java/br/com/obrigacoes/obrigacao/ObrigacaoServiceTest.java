@@ -75,8 +75,9 @@ class ObrigacaoServiceTest {
     }
 
     @Test
-    void devePermitirEditarMantendoResponsavelQueFoiInativadoDepois() {
+    void devePermitirEditarMantendoEmpresaEResponsavelQueForamInativadosDepois() {
         Obrigacao obrigacao = existente();
+        empresa.inativar();
         responsavel.inativar();
         when(repository.findById(5L)).thenReturn(Optional.of(obrigacao));
 
@@ -96,6 +97,34 @@ class ObrigacaoServiceTest {
         assertThatThrownBy(() -> service.atualizar(5L, requisicao(1L, 20L, obrigacao.getVersao())))
                 .isInstanceOf(RegraNegocioException.class);
         assertThat(obrigacao.getResponsavel()).isSameAs(responsavel);
+    }
+
+    @Test
+    void naoDeveAvaliarNovoVinculoAoEditarObrigacaoConcluida() {
+        Obrigacao obrigacao = existente();
+        obrigacao.alterarStatus(StatusObrigacao.EM_ANDAMENTO, Instant.now(RELOGIO));
+        obrigacao.alterarStatus(StatusObrigacao.CONCLUIDA, Instant.now(RELOGIO));
+        when(repository.findById(5L)).thenReturn(Optional.of(obrigacao));
+
+        assertThatThrownBy(() -> service.atualizar(5L, requisicao(2L, 20L, obrigacao.getVersao())))
+                .isInstanceOf(RegraNegocioException.class)
+                .hasMessageContaining("concluída");
+        verify(empresaService, never()).buscarAtivaPorId(anyLong());
+        verify(usuarioService, never()).buscarAtivoPorId(anyLong());
+    }
+
+    @Test
+    void devePermitirAvancarStatusComEmpresaEResponsavelInativos() {
+        Obrigacao obrigacao = existente();
+        empresa.inativar();
+        responsavel.inativar();
+        when(repository.buscarComBloqueio(5L)).thenReturn(Optional.of(obrigacao));
+
+        Obrigacao atualizada = service.alterarStatus(5L, StatusObrigacao.EM_ANDAMENTO);
+
+        assertThat(atualizada.getStatus()).isEqualTo(StatusObrigacao.EM_ANDAMENTO);
+        verify(empresaService, never()).buscarAtivaPorId(anyLong());
+        verify(usuarioService, never()).buscarAtivoPorId(anyLong());
     }
 
     @Test
